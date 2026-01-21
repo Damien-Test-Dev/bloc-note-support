@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -5,39 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc‑notes</title>
 
-  <!-- IMPORTANT : charge le CSS (ne pas écrire le chemin dans le body) -->
+  <!-- CSS (chargé via balise <link>, ne doit PAS apparaître dans la page) -->
   assets/css/styles.css?v=3
 </head>
+
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <h1>Bloc‑notes</h1>
+    </div>
+  </header>
 
-<header class="site-header">
-  <div class="header-inner">
-    <h1>Bloc‑notes</h1>
-  </div>
-</header>
+  <main class="container">
+    <!-- Onglets -->
+    <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
 
-<main class="container">
+    <!-- Zone de texte -->
+    <textarea
+      id="note"
+      class="note"
+      placeholder="Écris ici… puis clique sur « Sauvegarder »."
+    ></textarea>
 
-  <!-- Onglets (notes sauvegardées) -->
-  <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+    <!-- Boutons -->
+    <div class="actions">
+      <button id="saveBtn" class="btn">💾 Sauvegarder</button>
+      <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
+    </div>
+  </main>
 
-  <!-- Zone de texte -->
-  <textarea
-    id="note"
-    class="note"
-    placeholder="Écris ici… puis clique sur « Sauvegarder » pour créer un onglet."
-  ></textarea>
-
-  <!-- Actions -->
-  <div class="actions">
-    <button id="saveBtn" class="btn">💾 Sauvegarder</button>
-    <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
-  </div>
-
-</main>
-
-<!-- IMPORTANT : charge le JS (ne pas écrire le chemin dans le body) -->
-<scriptjs/app.js?v=3</script>
+  <!-- JS (chargé via balise <script>, ne doit PAS apparaître dans la page) -->
+  assets/js/app.js?v=3</script>
 </body>
 </html>
-``
