@@ -1,96 +1,93 @@
 
-// ES5 pour compat iOS 11/12 (pas d'arrow function, pas d'import/export)
 (function () {
-  var KEY = 'notepad.content.v1';
-  var TIME_KEY = 'notepad.savedAt.v1';
-  var note = document.getElementById('note');
+
+  var NOTES_KEY = 'notepad.notes.v1';
+  var ACTIVE_KEY = 'notepad.active.v1';
+
+  var tabsEl = document.getElementById('tabs');
+  var noteEl = document.getElementById('note');
   var saveBtn = document.getElementById('saveBtn');
   var clearBtn = document.getElementById('clearBtn');
-  var statusEl = document.getElementById('status');
-  var savedAtEl = document.getElementById('savedAt');
-  var saveTimer = null;
 
-  function setStatus(text, color) {
-    statusEl.textContent = text;
-    statusEl.style.color = color || '#a7f3d0';
+  function loadNotes() {
+    var data = localStorage.getItem(NOTES_KEY);
+    return data ? JSON.parse(data) : [];
   }
 
-  function formatDate(d) {
-    // Format simple lisible : JJ/MM/AAAA HH:MM:SS
-    var dd = ('0' + d.getDate()).slice(-2);
-    var mm = ('0' + (d.getMonth() + 1)).slice(-2);
-    var yyyy = d.getFullYear();
-    var hh = ('0' + d.getHours()).slice(-2);
-    var mi = ('0' + d.getMinutes()).slice(-2);
-    var ss = ('0' + d.getSeconds()).slice(-2);
-    return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + mi + ':' + ss;
+  function saveNotes(notes) {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
   }
 
-  function saveNow() {
-    try {
-      var content = note.value || '';
-      localStorage.setItem(KEY, content);
-      var now = new Date();
-      localStorage.setItem(TIME_KEY, now.getTime().toString());
-      setStatus('Enregistré', '#34d399'); // vert
-      savedAtEl.textContent = 'Dernière sauvegarde : ' + formatDate(now);
-      // Met à jour le titre pour retour visuel discret
-      document.title = 'Bloc-notes — Enregistré';
-    } catch (e) {
-      setStatus('Erreur de sauvegarde', '#f87171'); // rouge
+  function getActiveId() {
+    return localStorage.getItem(ACTIVE_KEY);
+  }
+
+  function setActiveId(id) {
+    localStorage.setItem(ACTIVE_KEY, id);
+  }
+
+  function renderTabs(notes, activeId) {
+    tabsEl.innerHTML = '';
+
+    notes.forEach(function (note) {
+      var tab = document.createElement('div');
+      tab.className = 'tab' + (note.id === activeId ? ' active' : '');
+      tab.textContent = note.title || 'Note';
+
+      tab.onclick = function () {
+        setActiveId(note.id);
+        render();
+      };
+
+      tabsEl.appendChild(tab);
+    });
+  }
+
+  function render() {
+    var notes = loadNotes();
+    var activeId = getActiveId();
+
+    if (!notes.length) {
+      var id = Date.now().toString();
+      notes.push({ id: id, title: 'Note 1', content: '' });
+      saveNotes(notes);
+      setActiveId(id);
+      activeId = id;
     }
+
+    var activeNote = notes.filter(function (n) {
+      return n.id === activeId;
+    })[0];
+
+    renderTabs(notes, activeId);
+    noteEl.value = activeNote ? activeNote.content : '';
   }
 
-  function scheduleSave() {
-    setStatus('En cours…', '#fbbf24'); // jaune
-    if (saveTimer) { clearTimeout(saveTimer); }
-    // debounce 600ms après l’arrêt de frappe
-    saveTimer = setTimeout(function () {
-      saveNow();
-    }, 600);
-  }
+  saveBtn.onclick = function () {
+    var notes = loadNotes();
+    var activeId = getActiveId();
 
-  function load() {
-    try {
-      var content = localStorage.getItem(KEY);
-      if (content !== null && typeof content !== 'undefined') {
-        note.value = content;
-      }
-      var ts = localStorage.getItem(TIME_KEY);
-      if (ts) {
-        var time = new Date(parseInt(ts, 10));
-        savedAtEl.textContent = 'Dernière sauvegarde : ' + formatDate(time);
-        setStatus('Enregistré', '#34d399');
-      } else {
-        setStatus('—', '#a7f3d0');
-      }
-    } catch (e) {
-      setStatus('Stockage indisponible', '#f87171');
+    var note = notes.filter(function (n) {
+      return n.id === activeId;
+    })[0];
+
+    if (!note) {
+      note = { id: Date.now().toString(), title: 'Note', content: '' };
+      notes.push(note);
+      setActiveId(note.id);
     }
-  }
 
-  function clearAll() {
-    var confirmClear = window.confirm('Effacer tout le contenu du bloc‑notes ?');
-    if (!confirmClear) return;
-    note.value = '';
-    try {
-      localStorage.removeItem(KEY);
-      localStorage.removeItem(TIME_KEY);
-      setStatus('Effacé', '#60a5fa'); // bleu
-      savedAtEl.textContent = 'Dernière sauvegarde : —';
-      document.title = 'Bloc-notes';
-    } catch (e) {
-      setStatus('Erreur lors de l’effacement', '#f87171');
-    }
-  }
+    note.content = noteEl.value;
+    note.title = noteEl.value.substring(0, 15) || 'Note';
 
-  // Events
-  note.addEventListener('input', scheduleSave);
-  saveBtn.addEventListener('click', saveNow);
-  clearBtn.addEventListener('click', clearAll);
+    saveNotes(notes);
+    render();
+  };
 
-  // Init
-  load();
-  // Premier titrage
-  if (!document.title) { document.title = 'Bloc-notes'; }
+  clearBtn.onclick = function () {
+    noteEl.value = '';
+  };
+
+  render();
+
 })();
