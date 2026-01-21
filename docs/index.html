@@ -5,34 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc‑notes</title>
 
-  <!-- Charger le CSS (ne pas écrire le chemin en texte dans le body) -->
-  assets/css/styles.css
+  <!-- IMPORTANT : charge le CSS (ne pas écrire le chemin dans le body) -->
+  assets/css/styles.css?v=3
 </head>
-
 <body>
-  <header class="site-header">
+
+<header class="site-header">
+  <div class="header-inner">
     <h1>Bloc‑notes</h1>
-  </header>
+  </div>
+</header>
 
-  <main class="container">
-    <!-- Barre d’onglets (notes enregistrées) -->
-    <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+<main class="container">
 
-    <!-- Zone de texte large -->
-    <textarea
-      id="note"
-      class="note"
-      placeholder="Écris ici… puis clique sur « Sauvegarder »."
-    ></textarea>
+  <!-- Onglets (notes sauvegardées) -->
+  <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
 
-    <!-- Actions -->
-    <div class="actions">
-      <button id="saveBtn" class="btn">💾 Sauvegarder</button>
-      <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
-    </div>
-  </main>
+  <!-- Zone de texte -->
+  <textarea
+    id="note"
+    class="note"
+    placeholder="Écris ici… puis clique sur « Sauvegarder » pour créer un onglet."
+  ></textarea>
 
-  <!-- Charger le JS (ne pas écrire le chemin en texte dans le body) -->
-  assets/js/app.js</script>
+  <!-- Actions -->
+  <div class="actions">
+    <button id="saveBtn" class="btn">💾 Sauvegarder</button>
+    <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
+  </div>
+
+</main>
+
+<!-- IMPORTANT : charge le JS (ne pas écrire le chemin dans le body) -->
+<scriptjs/app.js?v=3</script>
 </body>
 </html>
+``
