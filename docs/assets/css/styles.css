@@ -1,4 +1,8 @@
+
+/* ===== Base ===== */
 * { box-sizing: border-box; }
+
+html, body { height: 100%; }
 
 body {
   margin: 0;
@@ -7,9 +11,10 @@ body {
   color: #111827;
 }
 
+/* ===== Header ===== */
 .site-header {
   background: #111827;
-  color: #fff;
+  color: #ffffff;
   padding: 16px;
 }
 
@@ -19,20 +24,23 @@ body {
   margin: 0 auto;
 }
 
+/* ===== Layout ===== */
 .container {
   width: 100%;
   padding: 16px;
 }
 
-/* Onglets */
+/* ===== Tabs ===== */
 .tabs {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 6px;
-  margin: 12px auto 12px auto;
-  width: 80vw;          /* aligné avec la zone de texte */
+
+  /* aligné avec la zone de texte */
+  width: 80vw;
   max-width: 1400px;
+  margin: 12px auto 12px auto;
 }
 
 .tab {
@@ -47,15 +55,19 @@ body {
 
 .tab.active {
   background: #111827;
-  color: #fff;
+  color: #ffffff;
   border-color: #111827;
 }
 
-/* Zone de texte : 80% de la page */
+/* ===== Textarea ===== */
 .note {
   display: block;
+
+  /* 80% de la page */
   width: 80vw;
   max-width: 1400px;
+
+  /* Confort d’écriture */
   min-height: 65vh;
   margin: 0 auto;
   padding: 16px;
@@ -65,7 +77,7 @@ body {
 
   border: 1px solid #d1d5db;
   border-radius: 12px;
-  background: #fff;
+  background: #ffffff;
   color: #111827;
 
   resize: vertical;
@@ -73,15 +85,18 @@ body {
 
 .note:focus {
   outline: 3px solid #93c5fd;
+  outline-offset: 0;
 }
 
-/* Boutons */
+/* ===== Actions ===== */
 .actions {
   width: 80vw;
   max-width: 1400px;
   margin: 12px auto 0 auto;
+
   display: flex;
   gap: 12px;
+  justify-content: flex-start;
 }
 
 .btn {
@@ -90,8 +105,9 @@ body {
   border: none;
   cursor: pointer;
   font-size: 15px;
+
   background: #111827;
-  color: #fff;
+  color: #ffffff;
 }
 
 .btn:hover { background: #0b1220; }
@@ -109,9 +125,10 @@ body {
   background: #b91c1c;
 }
 
-/* Mobile : presque pleine largeur */
+/* ===== Mobile ===== */
 @media (max-width: 480px) {
   .tabs, .note, .actions {
     width: 94vw;
   }
 }
+``
