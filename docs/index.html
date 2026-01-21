@@ -4,34 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc‑notes</title>
+
+  <!-- Charger le CSS (ne pas écrire le chemin en texte dans le body) -->
+  assets/css/styles.css
 </head>
+
 <body>
+  <header class="site-header">
+    <h1>Bloc‑notes</h1>
+  </header>
 
-<header class="site-header">
-  <h1>Bloc‑notes</h1>
-</header>
+  <main class="container">
+    <!-- Barre d’onglets (notes enregistrées) -->
+    <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
 
-<main class="container">
+    <!-- Zone de texte large -->
+    <textarea
+      id="note"
+      class="note"
+      placeholder="Écris ici… puis clique sur « Sauvegarder »."
+    ></textarea>
 
-  <!-- Barre d’onglets (notes enregistrées) -->
-  <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+    <!-- Actions -->
+    <div class="actions">
+      <button id="saveBtn" class="btn">💾 Sauvegarder</button>
+      <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
+    </div>
+  </main>
 
-  <!-- Zone de texte large (80% de la page) -->
-  <textarea
-    id="note"
-    class="note"
-    placeholder="Écris ici… puis clique sur « Sauvegarder » pour créer/mettre à jour l’onglet."
-  ></textarea>
-
-  <!-- Actions -->
-  <div class="actions">
-    <button id="saveBtn" class="btn">💾 Sauvegarder</button>
-    <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
-  </div>
-
-</main>
-
-<!-- JS en fin de page -->
-assets/js/app.js</script>
+  <!-- Charger le JS (ne pas écrire le chemin en texte dans le body) -->
+  assets/js/app.js</script>
 </body>
 </html>
