@@ -1,6 +1,5 @@
-
+/* Base */
 * { box-sizing: border-box; }
-
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif;
@@ -8,16 +7,16 @@ body {
   color: #111827;
 }
 
+/* Header simple */
 .site-header {
   background: #111827;
   color: #fff;
   padding: 16px;
 }
 
+/* Conteneur large (on ne bride pas la largeur de page) */
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 16px;
 }
 
@@ -27,6 +26,7 @@ body {
   gap: 8px;
   margin-bottom: 12px;
   overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .tab {
@@ -35,6 +35,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
+  border: 1px solid #d1d5db;
 }
 
 .tab.active {
@@ -42,22 +43,31 @@ body {
   color: #fff;
 }
 
-/* Zone de texte */
+/* Zone de texte LARGE : 80% de la page (viewport) */
 .note {
-  width: 80%;
-  min-height: 65vh;
+  display: block;
+  width: 80vw;        /* 80% de la largeur de la page */
+  max-width: 1400px;  /* limite raisonnable sur écrans géants */
+  min-height: 65vh;   /* hauteur confortable pour écrire */
+  margin: 0 auto;     /* centré */
   padding: 16px;
   font-size: 16px;
+  line-height: 1.6;
   border-radius: 10px;
   border: 1px solid #d1d5db;
   resize: vertical;
+  background: #fff;
+  color: #111827;
 }
+
+.note:focus { outline: 3px solid #93c5fd; }
 
 /* Actions */
 .actions {
   margin-top: 12px;
   display: flex;
   gap: 12px;
+  justify-content: center; /* boutons centrés sous la zone */
 }
 
 .btn {
@@ -67,9 +77,16 @@ body {
   cursor: pointer;
   font-size: 15px;
   background: #111827;
-  color: white;
+  color: #fff;
 }
 
-.btn.danger {
-  background: #dc2626;
+.btn:hover { background: #0b1220; }
+.btn:focus { outline: 3px solid #93c5fd; outline-offset: 2px; }
+
+.btn.danger { background: #dc2626; }
+.btn.danger:hover { background: #b91c1c; }
+
+/* Mobile: sur petits écrans, prendre presque toute la largeur */
+@media (max-width: 480px) {
+  .note { width: 94vw; }
 }
