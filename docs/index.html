@@ -4,42 +4,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bloc-notes — GitHub Pages</title>
-  <meta name="description" content="Mini bloc-notes : écrire et sauvegarder du texte (localStorage).">
+  <title>Bloc‑notes</title>
   assets/css/styles.css
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1>Bloc‑notes</h1>
-      <div id="status" class="status" aria-live="polite" title="Statut de sauvegarde">—</div>
-    </div>
-  </header>
 
-  <main class="container">
-    <section class="card">
-      <p>Écris ton texte ci‑dessous. Il est sauvegardé automatiquement sur cet appareil.</p>
+<header class="site-header">
+  <h1>Bloc‑notes</h1>
+</header>
 
-      <label for="note" class="sr-only">Contenu du bloc-notes</label>
-      <textarea id="note" class="note" rows="16" placeholder="Commence à écrire ici…"></textarea>
+<main class="container">
 
-      <div class="actions">
-        <button id="saveBtn" class="btn" aria-label="Sauvegarder maintenant">💾 Sauvegarder</button>
-        <button id="clearBtn" class="btn btn-outline" aria-label="Effacer le contenu">🗑️ Effacer</button>
-      </div>
+  <!-- Onglets -->
+  <div id="tabs" class="tabs"></div>
 
-      <div class="meta">
-        <span id="savedAt">Dernière sauvegarde : —</span>
-      </div>
-    </section>
-  </main>
+  <!-- Zone de texte -->
+  <textarea
+    id="note"
+    class="note"
+    placeholder="Écris ton texte ici..."
+  ></textarea>
 
-  <footer class="site-footer">
-    <div class="container">
-      <small>© 2026 — GitHub Pages</small>
-    </div>
-  </footer>
+  <!-- Actions -->
+  <div class="actions">
+    <button id="saveBtn" class="btn">💾 Sauvegarder</button>
+    <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
+  </div>
 
-  assets/js/app.js</script>
+</main>
+
+assets/js/app.js</script>
 </body>
 </html>
