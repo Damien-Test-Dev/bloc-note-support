@@ -3,38 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bloc‑notes</title>
+  <title>Bloc-notes</title>
 
-  <!-- CSS (chargé via balise <link>, ne doit PAS apparaître dans la page) -->
-  assets/css/styles.css?v=3
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css?v=3">
 </head>
 
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <h1>Bloc‑notes</h1>
+      <h1>Bloc-notes</h1>
     </div>
   </header>
 
   <main class="container">
-    <!-- Onglets -->
     <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
 
-    <!-- Zone de texte -->
     <textarea
       id="note"
       class="note"
       placeholder="Écris ici… puis clique sur « Sauvegarder »."
     ></textarea>
 
-    <!-- Boutons -->
     <div class="actions">
       <button id="saveBtn" class="btn">💾 Sauvegarder</button>
       <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
     </div>
   </main>
 
-  <!-- JS (chargé via balise <script>, ne doit PAS apparaître dans la page) -->
-  assets/js/app.js?v=3</script>
+  <!-- JS -->
+  <script src="assets/js/app.js?v=3"></script>
 </body>
 </html>
