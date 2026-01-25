@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc-notes</title>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=5">
+  <link rel="stylesheet" href="assets/css/styles.css?v=6">
 </head>
 
 <body>
@@ -29,7 +29,7 @@
       <div class="home-head">
         <div class="home-title">
           <h2>Mes notes</h2>
-          <p class="muted">Pilotage visuel, ordre maîtrisé (drag & drop), favoris, export/import.</p>
+          <p class="muted">Dashboard, favoris, ordre maîtrisé, export/import.</p>
         </div>
 
         <div class="home-actions">
@@ -53,7 +53,6 @@
         </div>
       </div>
 
-      <!-- input file caché pour import -->
       <input id="importFile" type="file" accept="application/json" hidden>
     </section>
 
@@ -74,34 +73,111 @@
         </div>
       </div>
 
-      <!-- Couleur onglet -->
-      <div id="colorPanel" class="panel" aria-label="Couleur de l’onglet">
+      <!-- Couleur (hybride B + C + A + F) -->
+      <div id="colorPanel" class="panel" aria-label="Couleur & catégorie">
         <div class="panel-head">
           <div>
-            <div class="panel-title">Couleur de l’onglet</div>
-            <div class="muted">Réglage précis via sliders (HSL).</div>
+            <div class="panel-title">Couleur & catégorie</div>
+            <div class="muted">Ultra simple : catégorie, presets, récents ou picker natif. Avancé en option.</div>
           </div>
           <div class="color-preview" id="colorPreview" aria-label="Aperçu couleur"></div>
         </div>
 
-        <div class="sliders">
-          <label class="slider">
-            <span>Teinte</span>
-            <input id="hue" type="range" min="0" max="360" step="1">
-            <output id="hueOut">0</output>
-          </label>
+        <div class="color-grid">
+          <!-- Catégories -->
+          <div class="color-block">
+            <div class="block-head">
+              <div class="block-title">Catégorie</div>
+              <div id="colorMode" class="muted small"></div>
+            </div>
+            <div class="row">
+              <select id="tagSelect" class="select" aria-label="Choisir une catégorie">
+                <option value="">Sans catégorie</option>
+                <option value="Pro">Pro</option>
+                <option value="Perso">Perso</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Idées">Idées</option>
+                <option value="À lire">À lire</option>
+                <option value="Archive">Archive</option>
+              </select>
+              <div class="muted small">→ applique une couleur “par catégorie”.</div>
+            </div>
+          </div>
 
-          <label class="slider">
-            <span>Saturation</span>
-            <input id="sat" type="range" min="0" max="100" step="1">
-            <output id="satOut">0</output>
-          </label>
+          <!-- Presets -->
+          <div class="color-block">
+            <div class="block-head">
+              <div class="block-title">Presets</div>
+              <div class="muted small">1 clic</div>
+            </div>
 
-          <label class="slider">
-            <span>Luminosité</span>
-            <input id="light" type="range" min="0" max="100" step="1">
-            <output id="lightOut">0</output>
-          </label>
+            <div id="presetPalette" class="palette" aria-label="Palette de couleurs">
+              <button class="swatch" type="button" title="Bleu" data-hex="#3B82F6" style="--sw:#3B82F6"></button>
+              <button class="swatch" type="button" title="Indigo" data-hex="#6366F1" style="--sw:#6366F1"></button>
+              <button class="swatch" type="button" title="Violet" data-hex="#A855F7" style="--sw:#A855F7"></button>
+              <button class="swatch" type="button" title="Rose" data-hex="#EC4899" style="--sw:#EC4899"></button>
+              <button class="swatch" type="button" title="Rouge" data-hex="#EF4444" style="--sw:#EF4444"></button>
+              <button class="swatch" type="button" title="Orange" data-hex="#F97316" style="--sw:#F97316"></button>
+              <button class="swatch" type="button" title="Ambre" data-hex="#F59E0B" style="--sw:#F59E0B"></button>
+              <button class="swatch" type="button" title="Jaune" data-hex="#EAB308" style="--sw:#EAB308"></button>
+              <button class="swatch" type="button" title="Lime" data-hex="#84CC16" style="--sw:#84CC16"></button>
+              <button class="swatch" type="button" title="Vert" data-hex="#22C55E" style="--sw:#22C55E"></button>
+              <button class="swatch" type="button" title="Cyan" data-hex="#06B6D4" style="--sw:#06B6D4"></button>
+              <button class="swatch" type="button" title="Ardoise" data-hex="#64748B" style="--sw:#64748B"></button>
+              <button class="swatch" type="button" title="Noir doux" data-hex="#111827" style="--sw:#111827"></button>
+              <button class="swatch" type="button" title="Blanc" data-hex="#E5E7EB" style="--sw:#E5E7EB"></button>
+            </div>
+          </div>
+
+          <!-- Récents -->
+          <div class="color-block">
+            <div class="block-head">
+              <div class="block-title">Récents</div>
+              <div class="muted small">auto</div>
+            </div>
+            <div id="recentPalette" class="palette" aria-label="Couleurs récentes"></div>
+            <div class="muted small">Les 8 dernières couleurs personnalisées.</div>
+          </div>
+
+          <!-- Picker natif + Avancé -->
+          <div class="color-block">
+            <div class="block-head">
+              <div class="block-title">Couleur personnalisée</div>
+              <div class="muted small">précise</div>
+            </div>
+
+            <div class="row">
+              <input id="colorPicker" class="color-picker" type="color" aria-label="Choisir une couleur (picker natif)">
+              <div class="muted small">Picker natif → simple et rapide.</div>
+            </div>
+
+            <div class="row">
+              <button id="advancedToggle" class="btn secondary small-btn" type="button">⚙️ Avancé (HSL)</button>
+              <div class="muted small">Sliders pour réglage fin.</div>
+            </div>
+
+            <div id="advancedSection" class="advanced" hidden>
+              <div class="sliders">
+                <label class="slider">
+                  <span>Teinte</span>
+                  <input id="hue" type="range" min="0" max="360" step="1">
+                  <output id="hueOut">0</output>
+                </label>
+
+                <label class="slider">
+                  <span>Saturation</span>
+                  <input id="sat" type="range" min="0" max="100" step="1">
+                  <output id="satOut">0</output>
+                </label>
+
+                <label class="slider">
+                  <span>Luminosité</span>
+                  <input id="light" type="range" min="0" max="100" step="1">
+                  <output id="lightOut">0</output>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -109,7 +185,7 @@
       <textarea
         id="note"
         class="note"
-        placeholder="Écris ici… puis clique sur « Sauvegarder » (ou laisse l’autosave faire le job si tu es sur une note existante)."
+        placeholder="Écris ici… (autosave sur une note existante)."
       ></textarea>
 
       <!-- Boutons -->
@@ -125,6 +201,6 @@
     </section>
   </main>
 
-  <script src="assets/js/app.js?v=5"></script>
+  <script src="assets/js/app.js?v=6"></script>
 </body>
 </html>
