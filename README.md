@@ -1,85 +1,110 @@
+## Chemin complet GitHub
+
+`README.md`
+
+## Message de commit
+
+`docs(readme): update documentation with hybrid color UX (presets/recents/picker/tags) and agile increments`
+
 ```md
 # Bloc-notes — Premium (GitHub Pages)
 
-Application web **statique** de prise de notes, orientée productivité : **onglets**, **dashboard**, **couleurs par note**, **renommage**, **drag & drop**, **favoris**, **autosave**, **export/import JSON** — le tout en **zéro backend** via `localStorage`.
-
-> Positionnement : un bloc-notes moderne, rapide, autonome, idéal pour GitHub Pages et les environnements sans serveur.
-
----
-
-## Démo & accès
-
-- Déploiement typique GitHub Pages : `https://<user>.github.io/<repo>/`
-- Dossier source recommandé : `/docs` sur la branche `main`
+Application web **statique** de prise de notes orientée productivité : **onglets**, **dashboard**, **renommage**, **drag & drop**, **favoris**, **autosave**, **export/import JSON**, et désormais un **sélecteur de couleur ultra simple** (catégories + presets + récents + picker natif + HSL avancé).  
+Zéro backend : tout est stocké en **localStorage**.
 
 ---
 
-## Fonctionnalités
+## Démo & déploiement
 
-### Notes & onglets
-- Gestion de **notes multiples** via onglets.
-- **Nouvelle note** démarre un **brouillon** (aucune note persistée tant que tu ne sauvegardes pas).
+- URL GitHub Pages : `https://<user>.github.io/<repo>/`
+- Source recommandée : branche `main`, dossier `/docs`
+
+---
+
+## Fonctionnalités (à jour)
+
+### 1) Notes & onglets
+- Multi-notes via onglets.
+- **Nouvelle note** = démarre un **brouillon** (pas de note persistée tant que tu ne sauvegardes pas).
 - **Sauvegarder** :
-  - si une note est active → mise à jour de la note
-  - si aucun onglet actif (brouillon) → création d’une nouvelle note + onglet
+  - si une note est active → mise à jour
+  - si brouillon → création d’une nouvelle note + onglet
 - **Suppression** de la note active (ou nettoyage du brouillon).
 
-### Dashboard (Home)
-- Page “Mes notes” sous forme de **cards**.
-- **Recherche** sur titre + contenu.
-- Accès instantané à une note (clic sur la card).
-- Actions rapides depuis une card :
-  - ⭐ pin/unpin
-  - ✏️ renommer
-  - 🗑️ supprimer
+### 2) Dashboard (Home)
+- Page “Mes notes” en **cards**.
+- Recherche sur **titre + contenu + catégorie**.
+- Actions rapides sur card : ⭐ épingler, ✏️ renommer, 🗑️ supprimer.
+- Accès instantané à une note (clic).
 
-### Titres : auto + manuel
-- Par défaut, le titre suit la **première ligne** du contenu (`autoTitle=true`).
-- Renommage manuel :
+### 3) Titre auto + renommage manuel
+- Par défaut : titre = première ligne (`autoTitle=true`).
+- Renommage :
   - bouton **Renommer**
   - ou **double-clic** sur un onglet
-- Après renommage : `autoTitle=false` → le titre devient **stable** (plus d’écrasement automatique).
+- Après renommage : `autoTitle=false` (titre stable, non écrasé par le contenu).
 
-### Couleurs par note (réglage précis)
-- Chaque note a une **couleur persistée**.
-- Sélection via **sliders HSL** :
-  - Teinte (0–360)
-  - Saturation (0–100)
-  - Luminosité (0–100)
-- Si aucun onglet actif (brouillon), la couleur choisie devient la **couleur par défaut** de la prochaine note créée.
+### 4) Favoris / Pin ⭐
+- Épinglage des notes.
+- Organisation canonique :
+  - Favoris d’abord
+  - Non favoris ensuite
+- Ordre conservé à l’intérieur de chaque groupe.
 
-### Favoris / Pin ⭐
-- Épinglage d’une note en favoris.
-- Organisation :
-  - Groupe 1 : **favoris**
-  - Groupe 2 : **non favoris**
-- L’ordre est conservé dans chaque groupe.
+### 5) Réorganisation (Drag & Drop)
+- Drag & drop des onglets.
+- Règle produit : réordonnage **dans le même groupe uniquement** (favoris ↔ favoris, non favoris ↔ non favoris) pour maintenir une UX prévisible.
 
-### Réorganisation (Drag & Drop)
-- Drag & drop des onglets pour réordonner.
-- Règle produit : réorganisation **dans le même groupe uniquement** (favoris ↔ favoris, non favoris ↔ non favoris), pour éviter les surprises.
-
-### Autosave + indicateur “non sauvegardé”
-- Sur une **note existante** : autosave automatique après saisie (debounce).
-- Sur un **brouillon** : pas d’autosave (création explicite via sauvegarde).
+### 6) Autosave + indicateur d’état
+- Sur une **note existante** : autosave automatique (debounce).
+- Sur un **brouillon** : pas d’autosave (création volontaire via sauvegarde).
 - Indicateur en éditeur :
   - ✓ Enregistré / ● Non sauvegardé
   - Autosave actif / Brouillon (sauvegarde manuelle)
 
-### Copier
-- Bouton **Copier** : copie l’intégralité du texte de l’éditeur.
-- Support :
-  - Clipboard API (si disponible)
-  - fallback `execCommand('copy')`
+### 7) Copier
+- Bouton **Copier** : copie l’intégralité du texte.
+- Supporte Clipboard API et fallback navigateur.
 
-### Export / Import JSON
-- **Export** : génère un fichier `.json` téléchargeable contenant toutes les notes.
-- **Import** : fusionne un fichier `.json` dans l’existant :
-  - gestion des collisions d’ID (ID alternatif généré)
-  - normalisation des champs manquants (compat)
-- Formats acceptés :
-  - export v2 `{ version, exportedAt, notes: [...] }`
+### 8) Export / Import JSON
+- Export : fichier `.json` téléchargeable (toutes les notes).
+- Import : fusion + normalisation + gestion collisions d’ID.
+- Formats supportés :
+  - v2 `{ version, exportedAt, notes: [...] }`
   - ou tableau direct `[{...}, ...]`
+
+---
+
+## Nouveau : Couleur “hybride” (B + C + A + F)
+
+Objectif : permettre au user de choisir une couleur **en 1 clic**, tout en gardant une option “précision” pour les power users.
+
+### Modes disponibles
+1. **Catégorie (F)**  
+   Sélection d’une catégorie → la couleur est appliquée automatiquement (mode `tag`).  
+   Catégories disponibles :
+   - Pro
+   - Perso
+   - Urgent
+   - Idées
+   - À lire
+   - Archive
+
+2. **Presets (B)**  
+   Palette de pastilles harmonisées → 1 clic = couleur appliquée (mode `custom`).
+
+3. **Récents (C)**  
+   Les **8 dernières couleurs** utilisées (auto-alimenté) → 1 clic pour réutiliser.
+
+4. **Picker natif (A)**  
+   `input[type=color]` → simple, rapide, précis.
+
+5. **Avancé (HSL)**  
+   Section HSL masquée par défaut → activation manuelle via bouton “Avancé”.
+
+### Règle importante (brouillon vs note)
+- Si **note active** : la couleur et/ou la catégorie s’applique **à la note** (persistée).
+- Si **brouillon** : la couleur/catégorie devient le **default** de la prochaine note créée.
 
 ---
 
@@ -88,105 +113,51 @@ Application web **statique** de prise de notes, orientée productivité : **ongl
 - HTML / CSS / JavaScript (sans framework)
 - ES5 (compat iOS 11/12)
 - Déploiement GitHub Pages
-- Persistance `localStorage`
+- Persistance : `localStorage`
 
 ### Structure du repo
 ```
 
 docs/
-index.html          # UI + navigation Home/Editor
+index.html
 assets/
 css/
-styles.css      # style
+styles.css
 js/
-app.js          # logique (storage, autosave, dnd, import/export)
+app.js
 README.md
 
 ````
 
 ---
 
-## Démarrage (local)
+## Démarrage local
 
-### Option 1 — ouvrir directement
-- Ouvre `docs/index.html` dans ton navigateur.
+### Option simple
+- Ouvrir `docs/index.html`
 
-> Note : certaines APIs peuvent être limitées en `file://`. Pour reproduire GitHub Pages, préfère un serveur local.
-
-### Option 2 — serveur local (recommandé)
-Exemple Python :
+### Option recommandée (reproduit GitHub Pages)
 ```bash
 python -m http.server 8080
 ````
 
-Puis ouvre :
+Puis :
 
 * `http://localhost:8080/docs/`
 
 ---
 
-## Déploiement GitHub Pages (recommandé)
-
-1. Settings → Pages
-2. Source : Deploy from a branch
-3. Branch : `main`
-4. Folder : `/docs`
-5. Save
-
----
-
-## Parcours utilisateur (UX)
-
-### Créer une nouvelle note
-
-1. Home → Nouvelle note
-2. Écrire dans l’éditeur (brouillon)
-3. Sauvegarder
-   → création d’un onglet + note persistée
-
-### Modifier une note
-
-1. Sélectionner un onglet
-2. Éditer
-   → autosave s’exécute automatiquement
-
-### Renommer
-
-* Double-clic onglet
-  ou
-* Éditeur → Renommer
-  → titre manuel stable (autoTitle désactivé)
-
-### Couleur
-
-* Ajuster H/S/L
-  → couleur persistée sur la note active (ou utilisée pour le brouillon)
-
-### Favoris
-
-* Cliquer ⭐ depuis Home ou onglet
-  → la note passe dans le groupe Favoris
-
-### Réordonner
-
-* Drag & drop dans la barre d’onglets
-  → ordre persisté (par groupe)
-
-### Export / Import
-
-* Home → Export JSON
-* Home → Import JSON → sélectionner le fichier
-
----
-
 ## Stockage (localStorage)
 
-Clés :
+### Clés
 
 * `notepad.notes.v1` : tableau de notes
 * `notepad.active.v1` : id note active
 * `notepad.view.v1` : vue (`home` / `editor`)
-* `notepad.draftColor.v1` : couleur du brouillon
+* `notepad.draftColor.v1` : couleur brouillon (HSL)
+* `notepad.draftTag.v1` : catégorie brouillon
+* `notepad.draftColorMode.v1` : mode brouillon (`custom` / `tag`)
+* `notepad.recentColors.v1` : historique couleurs récentes (HEX)
 
 ### Modèle d’une note
 
@@ -198,57 +169,118 @@ Clés :
   "color": { "h": 210, "s": 80, "l": 45 },
   "updatedAt": 1700000000000,
   "pinned": false,
-  "autoTitle": true
+  "autoTitle": true,
+  "tag": "Pro",
+  "colorMode": "tag"
 }
 ```
 
-### Règles d’ordre
+### Invariants
 
-* Stockage canonique : favoris d’abord, puis non favoris.
-* L’ordre utilisateur est conservé dans chaque groupe.
-* `updatedAt` sert à l’affichage, pas à réordonner automatiquement.
+* Stockage canonique : favoris puis non favoris.
+* Ordre utilisateur conservé dans chaque groupe.
+* `updatedAt` sert à l’affichage, pas au tri automatique.
 
 ---
 
 ## Limites & décisions produit
 
-* Stockage local uniquement :
+* Stockage local :
 
-  * pas de synchro multi-appareils
-  * vider le stockage navigateur = perte des notes
-* L’import JSON sert de stratégie de sauvegarde/restauration.
-* Autosave uniquement sur note existante (brouillon volontairement explicite).
-
----
-
-## Contribuer (optionnel)
-
-### Conventions de commit (recommandées)
-
-* `feat(scope): ...`
-* `fix(scope): ...`
-* `docs(scope): ...`
-
-### Checklist QA
-
-* Création note → onglet créé, titre ok
-* Renommage → titre stable, autoTitle désactivé
-* Couleur → persiste, visible onglet + home
-* Pin/unpin → bascule groupe, ordre ok
-* Drag & drop → persiste dans le groupe
-* Autosave → s’exécute sur note active, statut correct
-* Export → fichier téléchargé
-* Import → merge ok, collisions gérées
+  * pas de sync multi-appareils
+  * effacer le stockage navigateur = perte des notes
+* Import JSON = stratégie de backup/restauration.
+* Autosave uniquement sur note existante (brouillon = action explicite).
 
 ---
 
-## Roadmap (idées futures)
+## Présentation Agile/Scrum — incréments (release par sprints)
 
-* Raccourcis clavier (Ctrl/Cmd+S, Ctrl/Cmd+K, Ctrl/Cmd+P)
-* Export sélectif (une note / favoris)
-* Thème clair/sombre
-* Drag & drop depuis la Home (cards)
-* Option sync cloud (si on accepte de sortir du 100% statique)
+> Vision : livrer un bloc-notes “simple à l’usage” mais “solide en mécanique”, avec une montée en gamme progressive.
+
+### Sprint 0 — Foundation (MVP)
+
+**Objectif** : l’app doit fonctionner, être stable, et déployable sur GitHub Pages.
+**Incrément livré**
+
+* UI de base
+* Éditeur de texte
+* Sauvegarde / effacement
+* Persistance `localStorage`
+
+**DoD**
+
+* Pas d’erreurs console
+* Données persistées après refresh
+
+---
+
+### Sprint 1 — Multi-notes (Core Product)
+
+**Objectif** : permettre une vraie gestion multi-notes.
+**Incrément livré**
+
+* Onglets multiples
+* Création de note à la sauvegarde (depuis brouillon)
+* Titre basé sur première ligne
+
+**DoD**
+
+* Création illimitée de notes
+* Switch onglet fiable
+
+---
+
+### Sprint 2 — Navigation & Dashboard (UX)
+
+**Objectif** : accélérer l’accès aux notes et la lisibilité du parc.
+**Incrément livré**
+
+* Home page (liste/cards)
+* Recherche
+* Accès direct à une note
+
+**DoD**
+
+* Navigation Home/Editor stable
+* Recherche performante sur un volume raisonnable
+
+---
+
+### Sprint 3 — Premium Ops (Productivité)
+
+**Objectif** : piloter le contenu comme un outil pro.
+**Incrément livré**
+
+* Renommage manuel (et verrouillage du titre)
+* Favoris (pin)
+* Drag & drop (réordonnage)
+* Export/Import JSON
+* Autosave + indicateur d’état
+* Copier le contenu
+
+**DoD**
+
+* Pas de pertes de données lors des actions
+* Import résilient (collisions gérées)
+
+---
+
+### Sprint 4 — Color UX Hybrid (Simplicité + précision)
+
+**Objectif** : rendre le choix de couleur évident, sans “panneau technique”.
+**Incrément livré**
+
+* Catégories avec couleurs (mode tag)
+* Presets en 1 clic
+* Couleurs récentes (8)
+* Picker natif
+* HSL avancé “opt-in”
+
+**DoD**
+
+* Choisir une couleur en < 2 secondes (presets / tag / récents)
+* Couleur persistée par note et reflétée UI (onglets + home)
 
 ---
 
