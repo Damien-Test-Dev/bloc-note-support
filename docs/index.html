@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc-notes</title>
 
-  <link rel="stylesheet" href="assets/css/styles.css?v=4">
+  <link rel="stylesheet" href="assets/css/styles.css?v=5">
 </head>
 
 <body>
@@ -29,36 +29,48 @@
       <div class="home-head">
         <div class="home-title">
           <h2>Mes notes</h2>
-          <p class="muted">Accès rapide, organisation claire, exécution immédiate.</p>
+          <p class="muted">Pilotage visuel, ordre maîtrisé (drag & drop), favoris, export/import.</p>
         </div>
 
         <div class="home-actions">
           <input id="searchInput" class="search" type="search" placeholder="Rechercher…" aria-label="Rechercher une note">
+          <button id="exportBtn" class="btn secondary" type="button">⬇️ Export JSON</button>
+          <button id="importBtn" class="btn secondary" type="button">⬆️ Import JSON</button>
           <button id="newBtnHome" class="btn" type="button">➕ Nouvelle note</button>
         </div>
       </div>
 
       <div id="notesList" class="notes-list" aria-live="polite"></div>
+
       <div id="emptyState" class="empty-state" hidden>
         <div class="empty-card">
           <div class="empty-emoji">🗒️</div>
           <div>
-            <div class="empty-title">Aucune note pour l’instant</div>
+            <div class="empty-title">Aucune note</div>
             <div class="muted">Crée ta première note et structure ton contenu comme un pro.</div>
           </div>
           <button id="emptyCreateBtn" class="btn" type="button">Créer une note</button>
         </div>
       </div>
+
+      <!-- input file caché pour import -->
+      <input id="importFile" type="file" accept="application/json" hidden>
     </section>
 
     <!-- EDITOR -->
     <section id="editorView" class="view" aria-label="Éditeur de note" hidden>
-      <!-- Onglets -->
-      <div class="tabs-row">
-        <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+      <div class="editor-top">
+        <div class="tabs-row">
+          <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
 
-        <div class="tabs-actions">
-          <button id="newBtn" class="btn secondary" type="button">➕ Nouvelle note</button>
+          <div class="tabs-actions">
+            <button id="newBtn" class="btn secondary" type="button">➕ Nouvelle note</button>
+          </div>
+        </div>
+
+        <div class="status-row">
+          <div id="saveStatus" class="save-status" aria-live="polite"></div>
+          <div class="muted hint">Astuce : double-clic sur un onglet pour renommer. Drag & drop pour réordonner.</div>
         </div>
       </div>
 
@@ -67,7 +79,7 @@
         <div class="panel-head">
           <div>
             <div class="panel-title">Couleur de l’onglet</div>
-            <div class="muted">Réglage précis via sliders (HSL) — parfait pour une organisation visuelle.</div>
+            <div class="muted">Réglage précis via sliders (HSL).</div>
           </div>
           <div class="color-preview" id="colorPreview" aria-label="Aperçu couleur"></div>
         </div>
@@ -97,20 +109,22 @@
       <textarea
         id="note"
         class="note"
-        placeholder="Écris ici… puis clique sur « Sauvegarder »."
+        placeholder="Écris ici… puis clique sur « Sauvegarder » (ou laisse l’autosave faire le job si tu es sur une note existante)."
       ></textarea>
 
       <!-- Boutons -->
       <div class="actions">
         <button id="saveBtn" class="btn" type="button">💾 Sauvegarder</button>
         <button id="copyBtn" class="btn secondary" type="button">📋 Copier</button>
-        <button id="clearBtn" class="btn danger" type="button">🗑️ Effacer</button>
+        <button id="renameBtn" class="btn secondary" type="button">✏️ Renommer</button>
+        <button id="pinBtn" class="btn secondary" type="button">⭐ Épingler</button>
+        <button id="clearBtn" class="btn danger" type="button">🗑️ Supprimer</button>
       </div>
 
       <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     </section>
   </main>
 
-  <script src="assets/js/app.js?v=4"></script>
+  <script src="assets/js/app.js?v=5"></script>
 </body>
 </html>
