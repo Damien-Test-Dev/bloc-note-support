@@ -5,36 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bloc-notes</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="assets/css/styles.css?v=3">
+  <link rel="stylesheet" href="assets/css/styles.css?v=4">
 </head>
 
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <h1>Bloc-notes</h1>
+      <div class="brand">
+        <h1>Bloc-notes</h1>
+        <div class="subtitle" id="notesCount" aria-live="polite"></div>
+      </div>
+
+      <nav class="nav" aria-label="Navigation">
+        <button id="homeBtn" class="nav-btn" type="button">🏠 Notes</button>
+        <button id="editorBtn" class="nav-btn" type="button">📝 Éditeur</button>
+      </nav>
     </div>
   </header>
 
   <main class="container">
-    <!-- Onglets -->
-    <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+    <!-- HOME / DASHBOARD -->
+    <section id="homeView" class="view" aria-label="Liste des notes">
+      <div class="home-head">
+        <div class="home-title">
+          <h2>Mes notes</h2>
+          <p class="muted">Accès rapide, organisation claire, exécution immédiate.</p>
+        </div>
 
-    <!-- Zone de texte -->
-    <textarea
-      id="note"
-      class="note"
-      placeholder="Écris ici… puis clique sur « Sauvegarder »."
-    ></textarea>
+        <div class="home-actions">
+          <input id="searchInput" class="search" type="search" placeholder="Rechercher…" aria-label="Rechercher une note">
+          <button id="newBtnHome" class="btn" type="button">➕ Nouvelle note</button>
+        </div>
+      </div>
 
-    <!-- Boutons -->
-    <div class="actions">
-      <button id="saveBtn" class="btn">💾 Sauvegarder</button>
-      <button id="clearBtn" class="btn danger">🗑️ Effacer</button>
-    </div>
+      <div id="notesList" class="notes-list" aria-live="polite"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <div class="empty-card">
+          <div class="empty-emoji">🗒️</div>
+          <div>
+            <div class="empty-title">Aucune note pour l’instant</div>
+            <div class="muted">Crée ta première note et structure ton contenu comme un pro.</div>
+          </div>
+          <button id="emptyCreateBtn" class="btn" type="button">Créer une note</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDITOR -->
+    <section id="editorView" class="view" aria-label="Éditeur de note" hidden>
+      <!-- Onglets -->
+      <div class="tabs-row">
+        <div id="tabs" class="tabs" aria-label="Onglets de notes"></div>
+
+        <div class="tabs-actions">
+          <button id="newBtn" class="btn secondary" type="button">➕ Nouvelle note</button>
+        </div>
+      </div>
+
+      <!-- Couleur onglet -->
+      <div id="colorPanel" class="panel" aria-label="Couleur de l’onglet">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Couleur de l’onglet</div>
+            <div class="muted">Réglage précis via sliders (HSL) — parfait pour une organisation visuelle.</div>
+          </div>
+          <div class="color-preview" id="colorPreview" aria-label="Aperçu couleur"></div>
+        </div>
+
+        <div class="sliders">
+          <label class="slider">
+            <span>Teinte</span>
+            <input id="hue" type="range" min="0" max="360" step="1">
+            <output id="hueOut">0</output>
+          </label>
+
+          <label class="slider">
+            <span>Saturation</span>
+            <input id="sat" type="range" min="0" max="100" step="1">
+            <output id="satOut">0</output>
+          </label>
+
+          <label class="slider">
+            <span>Luminosité</span>
+            <input id="light" type="range" min="0" max="100" step="1">
+            <output id="lightOut">0</output>
+          </label>
+        </div>
+      </div>
+
+      <!-- Zone de texte -->
+      <textarea
+        id="note"
+        class="note"
+        placeholder="Écris ici… puis clique sur « Sauvegarder »."
+      ></textarea>
+
+      <!-- Boutons -->
+      <div class="actions">
+        <button id="saveBtn" class="btn" type="button">💾 Sauvegarder</button>
+        <button id="copyBtn" class="btn secondary" type="button">📋 Copier</button>
+        <button id="clearBtn" class="btn danger" type="button">🗑️ Effacer</button>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    </section>
   </main>
 
-  <!-- JS -->
-  <script src="assets/js/app.js?v=3"></script>
+  <script src="assets/js/app.js?v=4"></script>
 </body>
 </html>
