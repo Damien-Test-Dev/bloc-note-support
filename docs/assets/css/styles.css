@@ -355,6 +355,8 @@ body {
   flex-wrap: wrap;
 }
 
+/* ✅ FIX: select dropdown options visibility (white popup + light text = invisible)
+   On force des options lisibles sur fond clair, tout en gardant le select “dark” fermé. */
 .select {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
@@ -362,6 +364,23 @@ body {
   color: #e5e7eb;
   padding: 10px 12px;
   font-size: 14px;
+}
+
+.select:focus {
+  outline: 3px solid rgba(147,197,253,0.65);
+  outline-offset: 2px;
+}
+
+/* La plupart des navigateurs rendent la liste des options sur fond clair.
+   On impose donc un texte sombre + fond blanc pour assurer le contraste. */
+.select option {
+  background: #ffffff;
+  color: #111827;
+}
+
+/* Option “Sans catégorie” légèrement désaccentuée mais lisible */
+.select option[value=""] {
+  color: #6b7280;
 }
 
 .palette {
