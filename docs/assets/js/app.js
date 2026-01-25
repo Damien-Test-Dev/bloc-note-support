@@ -1,12 +1,26 @@
 // Fichier : docs/assets/js/app.js
-// Premium : rename onglets + drag&drop reorder + pin/favoris + export/import JSON + autosave + dirty indicator + couleurs HSL
+// Premium + Hybrid color UX (B presets + C recents + A native picker + F categories)
 // ES5 compatible (iOS 11/12)
 
 (function () {
   var NOTES_KEY = 'notepad.notes.v1';
   var ACTIVE_KEY = 'notepad.active.v1';
   var VIEW_KEY = 'notepad.view.v1';
-  var DRAFT_COLOR_KEY = 'notepad.draftColor.v1';
+
+  var DRAFT_COLOR_KEY = 'notepad.draftColor.v1'; // legacy
+  var DRAFT_TAG_KEY = 'notepad.draftTag.v1';
+  var DRAFT_COLORMODE_KEY = 'notepad.draftColorMode.v1';
+
+  var RECENT_COLORS_KEY = 'notepad.recentColors.v1';
+
+  var TAG_COLORS = {
+    'Pro': '#3B82F6',
+    'Perso': '#A855F7',
+    'Urgent': '#EF4444',
+    'Idées': '#22C55E',
+    'À lire': '#F59E0B',
+    'Archive': '#64748B'
+  };
 
   var homeView = document.getElementById('homeView');
   var editorView = document.getElementById('editorView');
@@ -37,7 +51,7 @@
   var importBtn = document.getElementById('importBtn');
   var importFile = document.getElementById('importFile');
 
-  // Color panel
+  // Color UI
   var colorPreview = document.getElementById('colorPreview');
   var hueEl = document.getElementById('hue');
   var satEl = document.getElementById('sat');
@@ -46,12 +60,21 @@
   var satOut = document.getElementById('satOut');
   var lightOut = document.getElementById('lightOut');
 
+  var tagSelect = document.getElementById('tagSelect');
+  var colorModeEl = document.getElementById('colorMode');
+  var colorPicker = document.getElementById('colorPicker');
+
+  var presetPalette = document.getElementById('presetPalette');
+  var recentPalette = document.getElementById('recentPalette');
+
+  var advancedToggle = document.getElementById('advancedToggle');
+  var advancedSection = document.getElementById('advancedSection');
+
   var toastEl = document.getElementById('toast');
   var saveStatusEl = document.getElementById('saveStatus');
 
   // Autosave / dirty state
   var isDirty = false;
-  var lastSavedValue = '';
   var autosaveTimer = null;
 
   // Drag&drop state
@@ -70,7 +93,6 @@
 
   function saveNotes(notes) {
     try {
-      // On maintient l’invariant : épinglées d’abord, puis non épinglées (ordre utilisateur dans chaque bloc)
       notes = normalizeOrder(notes);
       localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
     } catch (e) {}
@@ -96,7 +118,19 @@
     catch (e) {}
   }
 
+  function defaultColor() { return { h: 210, s: 80, l: 45 }; }
+
+  function normalizeColor(c) {
+    c = c || {};
+    return {
+      h: clamp(parseInt(c.h, 10) || 210, 0, 360),
+      s: clamp(parseInt(c.s, 10) || 80, 0, 100),
+      l: clamp(parseInt(c.l, 10) || 45, 0, 100)
+    };
+  }
+
   function getDraftColor() {
+    // compat legacy
     try {
       var raw = localStorage.getItem(DRAFT_COLOR_KEY);
       if (!raw) return defaultColor();
@@ -111,6 +145,42 @@
     catch (e) {}
   }
 
+  function getDraftTag() {
+    try { return localStorage.getItem(DRAFT_TAG_KEY) || ''; }
+    catch (e) { return ''; }
+  }
+
+  function setDraftTag(t) {
+    try { localStorage.setItem(DRAFT_TAG_KEY, t || ''); }
+    catch (e) {}
+  }
+
+  function getDraftColorMode() {
+    try { return localStorage.getItem(DRAFT_COLORMODE_KEY) || 'custom'; }
+    catch (e) { return 'custom'; }
+  }
+
+  function setDraftColorMode(m) {
+    try { localStorage.setItem(DRAFT_COLORMODE_KEY, m || 'custom'); }
+    catch (e) {}
+  }
+
+  function loadRecentColors() {
+    try {
+      var raw = localStorage.getItem(RECENT_COLORS_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      if (!arr || !arr.length) return [];
+      return arr;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveRecentColors(arr) {
+    try { localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(arr || [])); }
+    catch (e) {}
+  }
+
   // -------- Utils --------
   function nowTs() { return new Date().getTime(); }
 
@@ -120,16 +190,7 @@
     return n;
   }
 
-  function normalizeColor(c) {
-    c = c || {};
-    return {
-      h: clamp(parseInt(c.h, 10) || 210, 0, 360),
-      s: clamp(parseInt(c.s, 10) || 80, 0, 100),
-      l: clamp(parseInt(c.l, 10) || 45, 0, 100)
-    };
-  }
-
-  function defaultColor() { return { h: 210, s: 80, l: 45 }; }
+  function trim(s) { return (s || '').replace(/^\s+|\s+$/g, ''); }
 
   function hslToCss(c) {
     c = normalizeColor(c);
@@ -139,8 +200,6 @@
   function idealTextColorFromLightness(l) {
     return l >= 62 ? '#111827' : '#ffffff';
   }
-
-  function trim(s) { return (s || '').replace(/^\s+|\s+$/g, ''); }
 
   function firstLineTitle(text) {
     var t = (text || '').split(/\r?\n/)[0];
@@ -165,6 +224,90 @@
     } catch (e) {
       return '';
     }
+  }
+
+  // --- Color conversions (HEX <-> HSL) ---
+  function hexToRgb(hex) {
+    hex = String(hex || '').replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length !== 6) return { r: 0, g: 0, b: 0 };
+
+    var r = parseInt(hex.slice(0, 2), 16);
+    var g = parseInt(hex.slice(2, 4), 16);
+    var b = parseInt(hex.slice(4, 6), 16);
+    return { r: r, g: g, b: b };
+  }
+
+  function rgbToHex(r, g, b) {
+    function to2(n) {
+      var s = n.toString(16);
+      return s.length === 1 ? '0' + s : s;
+    }
+    return '#' + to2(r) + to2(g) + to2(b);
+  }
+
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r, g, b);
+    var min = Math.min(r, g, b);
+    var h, s, l;
+    l = (max + min) / 2;
+
+    if (max === min) {
+      h = 0; s = 0;
+    } else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4; break;
+      }
+      h *= 60;
+    }
+
+    return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  }
+
+  function hslToRgb(h, s, l) {
+    h = (h % 360) / 360;
+    s = s / 100;
+    l = l / 100;
+
+    var r, g, b;
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+  }
+
+  function hexToHsl(hex) {
+    var rgb = hexToRgb(hex);
+    return normalizeColor(rgbToHsl(rgb.r, rgb.g, rgb.b));
+  }
+
+  function hslToHex(c) {
+    c = normalizeColor(c);
+    var rgb = hslToRgb(c.h, c.s, c.l);
+    return rgbToHex(rgb.r, rgb.g, rgb.b);
   }
 
   function findNote(notes, id) {
@@ -197,9 +340,13 @@
     n.color = normalizeColor(n.color);
     if (!n.updatedAt) n.updatedAt = nowTs();
     if (typeof n.pinned !== 'boolean') n.pinned = false;
-
-    // autoTitle : héritage = true (comme l’ancien comportement)
     if (typeof n.autoTitle !== 'boolean') n.autoTitle = true;
+
+    if (typeof n.tag !== 'string') n.tag = '';
+    n.tag = trim(n.tag);
+    if (n.tag.length > 30) n.tag = n.tag.slice(0, 30);
+
+    if (n.colorMode !== 'tag' && n.colorMode !== 'custom') n.colorMode = 'custom';
 
     return n;
   }
@@ -217,7 +364,6 @@
   }
 
   function normalizeOrder(notes) {
-    // Stockage canonique : épinglées d’abord (ordre existant), puis normales (ordre existant)
     var s = splitPinned(notes);
     return s.pinned.concat(s.normal);
   }
@@ -232,6 +378,7 @@
     }, 1800);
   }
 
+  // -------- View handling --------
   function showHome() {
     homeView.hidden = false;
     editorView.hidden = true;
@@ -254,14 +401,9 @@
     renderSaveStatus();
   }
 
-  function markSavedState(value) {
-    lastSavedValue = value || '';
-    setDirty(false);
-  }
-
   function computeDirtyAgainstCurrent(current) {
     var v = noteEl.value || '';
-    if (!current) return !!trim(v); // brouillon : dirty si du contenu existe
+    if (!current) return !!trim(v);
     return v !== (current.content || '');
   }
 
@@ -295,7 +437,7 @@
 
   function autosaveIfNeeded() {
     var activeId = getActiveId();
-    if (!activeId) return; // pas d’autosave sur brouillon
+    if (!activeId) return;
 
     var notes = loadNotes();
     var current = findNote(notes, activeId);
@@ -303,24 +445,178 @@
 
     current = ensureNoteShape(current);
 
-    // Si rien de nouveau, ne touche à rien
     var v = noteEl.value || '';
     if (v === (current.content || '')) return;
 
     current.content = v;
 
-    // Title : seulement si autoTitle = true
-    if (current.autoTitle) {
-      current.title = firstLineTitle(v);
-    }
+    if (current.autoTitle) current.title = firstLineTitle(v);
 
     current.updatedAt = nowTs();
     saveNotes(notes);
 
-    // Update UI sans casser le curseur : on rerend tabs + home sans réécrire noteEl.value
     partialRender(true);
     toast('Autosave ✓');
     setDirty(false);
+  }
+
+  // -------- Hybrid color UX --------
+  function pushRecent(hex) {
+    hex = String(hex || '').toUpperCase();
+    if (!hex || hex.charAt(0) !== '#') return;
+
+    var arr = loadRecentColors();
+    var i;
+    for (i = 0; i < arr.length; i++) {
+      if (String(arr[i]).toUpperCase() === hex) {
+        arr.splice(i, 1);
+        break;
+      }
+    }
+    arr.unshift(hex);
+    if (arr.length > 8) arr = arr.slice(0, 8);
+    saveRecentColors(arr);
+    renderRecents(arr);
+  }
+
+  function renderRecents(arr) {
+    if (!recentPalette) return;
+    recentPalette.innerHTML = '';
+
+    arr = arr || loadRecentColors();
+    if (!arr.length) {
+      var t = document.createElement('div');
+      t.className = 'muted small';
+      t.textContent = '—';
+      recentPalette.appendChild(t);
+      return;
+    }
+
+    var i, btn;
+    for (i = 0; i < arr.length; i++) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch';
+      btn.setAttribute('data-hex', arr[i]);
+      btn.title = arr[i];
+      btn.style.setProperty('--sw', arr[i]);
+
+      btn.onclick = (function (hex) {
+        return function () { setColorFromHex(hex, 'custom', true); };
+      })(arr[i]);
+
+      recentPalette.appendChild(btn);
+    }
+  }
+
+  function updateColorModeLabel(mode, tag) {
+    if (!colorModeEl) return;
+    if (mode === 'tag' && tag) {
+      colorModeEl.textContent = 'Mode : Catégorie (' + tag + ')';
+    } else {
+      colorModeEl.textContent = 'Mode : Personnalisée';
+    }
+  }
+
+  function syncColorUI(c, mode, tag) {
+    c = normalizeColor(c);
+
+    if (hueEl) hueEl.value = String(c.h);
+    if (satEl) satEl.value = String(c.s);
+    if (lightEl) lightEl.value = String(c.l);
+
+    if (hueOut) hueOut.textContent = String(c.h);
+    if (satOut) satOut.textContent = String(c.s);
+    if (lightOut) lightOut.textContent = String(c.l);
+
+    if (colorPreview) colorPreview.style.background = hslToCss(c);
+
+    if (colorPicker) {
+      try { colorPicker.value = hslToHex(c); } catch (e) {}
+    }
+
+    updateColorModeLabel(mode, tag);
+  }
+
+  function getCurrentContext() {
+    var notes = loadNotes();
+    var activeId = getActiveId();
+    var current = activeId ? findNote(notes, activeId) : null;
+    if (current) current = ensureNoteShape(current);
+
+    return { notes: notes, activeId: activeId, current: current };
+  }
+
+  function setColorFromHex(hex, mode, addRecent) {
+    var c = hexToHsl(hex);
+    setColorFromHsl(c, mode || 'custom', addRecent ? true : false);
+  }
+
+  function setColorFromHsl(c, mode, addRecent) {
+    c = normalizeColor(c);
+    var ctx = getCurrentContext();
+    var tag = '';
+
+    if (ctx.current) {
+      tag = ctx.current.tag || '';
+      ctx.current.color = c;
+      ctx.current.colorMode = mode || 'custom';
+      ctx.current.updatedAt = nowTs();
+      saveNotes(ctx.notes);
+      syncColorUI(c, ctx.current.colorMode, tag);
+      partialRender(true);
+    } else {
+      // draft
+      setDraftColor(c);
+      setDraftColorMode(mode || 'custom');
+      tag = getDraftTag();
+      syncColorUI(c, getDraftColorMode(), tag);
+      partialRender(true);
+    }
+
+    if (addRecent) pushRecent(hslToHex(c));
+  }
+
+  function applyTag(tag) {
+    tag = trim(tag || '');
+    var ctx = getCurrentContext();
+    var colorHex = tag && TAG_COLORS[tag] ? TAG_COLORS[tag] : null;
+
+    if (ctx.current) {
+      ctx.current.tag = tag;
+
+      if (tag) {
+        ctx.current.colorMode = 'tag';
+        if (colorHex) ctx.current.color = hexToHsl(colorHex);
+      } else {
+        // sans catégorie => on repasse en custom (on garde la couleur actuelle)
+        ctx.current.colorMode = 'custom';
+      }
+
+      ctx.current.updatedAt = nowTs();
+      saveNotes(ctx.notes);
+
+      if (tagSelect) tagSelect.value = tag;
+      syncColorUI(ctx.current.color, ctx.current.colorMode, ctx.current.tag);
+      partialRender(true);
+
+      toast(tag ? ('Catégorie : ' + tag) : 'Catégorie retirée.');
+      return;
+    }
+
+    // draft
+    setDraftTag(tag);
+    if (tag) {
+      setDraftColorMode('tag');
+      if (colorHex) setDraftColor(hexToHsl(colorHex));
+    } else {
+      setDraftColorMode('custom');
+    }
+
+    if (tagSelect) tagSelect.value = tag;
+
+    syncColorUI(getDraftColor(), getDraftColorMode(), getDraftTag());
+    partialRender(true);
   }
 
   // -------- UI render --------
@@ -332,7 +628,6 @@
 
   function renderTabs(notes, activeId) {
     tabsEl.innerHTML = '';
-
     if (!notes.length) return;
 
     var i, n, tab, titleSpan, pinBtnEl, bg, fg;
@@ -398,7 +693,6 @@
 
       tab.ondragend = function () {
         dragId = '';
-        // nettoyage classe
         var els = tabsEl.querySelectorAll('.tab');
         var k;
         for (k = 0; k < els.length; k++) {
@@ -406,9 +700,7 @@
         }
       };
 
-      tab.ondragover = function (e) {
-        e.preventDefault();
-      };
+      tab.ondragover = function (e) { e.preventDefault(); };
 
       tab.ondrop = (function (toId) {
         return function (e) {
@@ -426,13 +718,13 @@
     var q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
     var list = notes.slice(); // déjà canonique (pinned puis normal)
 
-    // filtre recherche, mais on garde l’ordre utilisateur
     if (q) {
       list = list.filter(function (n) {
         n = ensureNoteShape(n);
         var t = (n.title || '').toLowerCase();
         var c = (n.content || '').toLowerCase();
-        return t.indexOf(q) !== -1 || c.indexOf(q) !== -1;
+        var g = (n.tag || '').toLowerCase();
+        return t.indexOf(q) !== -1 || c.indexOf(q) !== -1 || g.indexOf(q) !== -1;
       });
     }
 
@@ -454,7 +746,7 @@
       return;
     }
 
-    var i, n, card, bar, top, left, title, actions, pin, ren, del, meta, snip;
+    var i, n, card, bar, top, left, title, actions, pin, ren, del, meta, snip, tagBadge;
 
     for (i = 0; i < list.length; i++) {
       n = ensureNoteShape(list[i]);
@@ -478,6 +770,13 @@
       meta = document.createElement('div');
       meta.className = 'card-meta';
       meta.textContent = 'Mis à jour : ' + formatDate(n.updatedAt);
+
+      if (n.tag) {
+        tagBadge = document.createElement('span');
+        tagBadge.className = 'badge';
+        tagBadge.textContent = '🏷️ ' + n.tag;
+        left.appendChild(tagBadge);
+      }
 
       left.appendChild(title);
       left.appendChild(meta);
@@ -552,20 +851,6 @@
     }
   }
 
-  function syncColorUI(c) {
-    c = normalizeColor(c);
-
-    hueEl.value = String(c.h);
-    satEl.value = String(c.s);
-    lightEl.value = String(c.l);
-
-    hueOut.textContent = String(c.h);
-    satOut.textContent = String(c.s);
-    lightOut.textContent = String(c.l);
-
-    if (colorPreview) colorPreview.style.background = hslToCss(c);
-  }
-
   function renderEditor(notes, preserveEditorValue) {
     var activeId = getActiveId();
     var current = activeId ? findNote(notes, activeId) : null;
@@ -581,28 +866,29 @@
     if (current) {
       current = ensureNoteShape(current);
 
-      if (!preserveEditorValue) {
-        noteEl.value = current.content || '';
-      }
+      if (!preserveEditorValue) noteEl.value = current.content || '';
 
-      syncColorUI(current.color);
+      // Tag UI
+      if (tagSelect) tagSelect.value = current.tag || '';
 
-      // Bouton pin dans l’éditeur
+      // Color UI
+      syncColorUI(current.color, current.colorMode, current.tag);
+
+      // Editor pin label
       pinBtn.textContent = current.pinned ? '⭐ Désépingler' : '⭐ Épingler';
 
-      // Dirty state basé sur current
       setDirty(computeDirtyAgainstCurrent(current));
-      markSavedValue(current.content || '');
     } else {
-      // brouillon
-      if (!preserveEditorValue) {
-        noteEl.value = noteEl.value || '';
-      }
-      syncColorUI(getDraftColor());
+      // draft
+      if (!preserveEditorValue) noteEl.value = noteEl.value || '';
+
+      if (tagSelect) tagSelect.value = getDraftTag() || '';
+
+      syncColorUI(getDraftColor(), getDraftColorMode(), getDraftTag());
 
       pinBtn.textContent = '⭐ Épingler';
+
       setDirty(computeDirtyAgainstCurrent(null));
-      renderSaveStatus();
     }
   }
 
@@ -620,11 +906,12 @@
 
     renderHome(notes);
     renderEditor(notes, !!preserveEditorValue);
+
     renderSaveStatus();
+    renderRecents(loadRecentColors());
   }
 
   function partialRender(preserveEditorValue) {
-    // Rerender “safe” : tabs + home + header, sans écraser le textarea (préserve curseur)
     var notes = loadNotes();
     var i;
     for (i = 0; i < notes.length; i++) notes[i] = ensureNoteShape(notes[i]);
@@ -633,7 +920,9 @@
     renderHeaderMeta(notes);
     renderHome(notes);
     renderEditor(notes, !!preserveEditorValue);
+
     renderSaveStatus();
+    renderRecents(loadRecentColors());
   }
 
   // -------- Actions --------
@@ -652,17 +941,12 @@
     var activeId = getActiveId();
     var content = noteEl.value || '';
 
-    // update note existante
     if (activeId) {
       var existing = findNote(notes, activeId);
       if (existing) {
         existing = ensureNoteShape(existing);
         existing.content = content;
-
-        if (existing.autoTitle) {
-          existing.title = firstLineTitle(content);
-        }
-
+        if (existing.autoTitle) existing.title = firstLineTitle(content);
         existing.updatedAt = nowTs();
         saveNotes(notes);
         partialRender(true);
@@ -675,19 +959,29 @@
       }
     }
 
-    // création d’une nouvelle note
+    // création depuis brouillon
     var id = String(nowTs());
-    var c = getDraftColor();
     var title = firstLineTitle(content);
+
+    var dTag = getDraftTag();
+    var dMode = getDraftColorMode();
+    var dColor = getDraftColor();
+
+    // si mode tag mais tag inconnu => fallback custom
+    if (dMode === 'tag' && dTag && TAG_COLORS[dTag]) {
+      dColor = hexToHsl(TAG_COLORS[dTag]);
+    }
 
     notes.push({
       id: id,
       title: title,
       content: content,
-      color: normalizeColor(c),
+      color: normalizeColor(dColor),
       updatedAt: nowTs(),
       pinned: false,
-      autoTitle: true
+      autoTitle: true,
+      tag: dTag || '',
+      colorMode: (dTag ? dMode : 'custom')
     });
 
     saveNotes(notes);
@@ -703,7 +997,6 @@
   function deleteActiveOrClear() {
     var activeId = getActiveId();
     if (!activeId) {
-      // brouillon
       noteEl.value = '';
       fullRender(true);
       toast('Brouillon vidé.');
@@ -720,13 +1013,11 @@
 
     saveNotes(notes);
 
-    // si on supprime l’actif, retour brouillon
     if (getActiveId() === id) {
       setActiveId('');
       noteEl.value = '';
     }
 
-    // view : si plus aucune note, va à l’éditeur (tradition du bloc-notes)
     if (!notes.length) setView('editor');
     else setView('home');
 
@@ -801,22 +1092,16 @@
     n.pinned = !n.pinned;
     n.updatedAt = nowTs();
 
-    // Déplacement : pin/unpin -> tête de bloc pour “impact” immédiat
     var idx = indexOfNote(notes, id);
     if (idx >= 0) notes.splice(idx, 1);
 
-    // rebuild blocs
     var s = splitPinned(notes);
-    if (n.pinned) {
-      s.pinned.unshift(n);
-    } else {
-      s.normal.unshift(n);
-    }
+    if (n.pinned) s.pinned.unshift(n);
+    else s.normal.unshift(n);
 
     notes = s.pinned.concat(s.normal);
     saveNotes(notes);
 
-    // UI
     partialRender(true);
     toast(n.pinned ? 'Ajouté aux favoris.' : 'Retiré des favoris.');
   }
@@ -835,11 +1120,9 @@
       return;
     }
 
-    // extraire le bloc cible
     var s = splitPinned(notes);
     var group = from.pinned ? s.pinned : s.normal;
 
-    // ids dans l’ordre
     var ids = [];
     var i;
     for (i = 0; i < group.length; i++) ids.push(group[i].id);
@@ -851,53 +1134,17 @@
     }
     if (fromIdx < 0 || toIdx < 0) return;
 
-    // move
     ids.splice(toIdx, 0, ids.splice(fromIdx, 1)[0]);
 
-    // rebuild group by ids
     var newGroup = [];
-    for (i = 0; i < ids.length; i++) {
-      newGroup.push(findNote(group, ids[i]));
-    }
+    for (i = 0; i < ids.length; i++) newGroup.push(findNote(group, ids[i]));
 
-    if (from.pinned) {
-      notes = newGroup.concat(s.normal);
-    } else {
-      notes = s.pinned.concat(newGroup);
-    }
+    if (from.pinned) notes = newGroup.concat(s.normal);
+    else notes = s.pinned.concat(newGroup);
 
     saveNotes(notes);
     partialRender(true);
     toast('Ordre mis à jour.');
-  }
-
-  function applyColorChange() {
-    var c = normalizeColor({
-      h: hueEl.value,
-      s: satEl.value,
-      l: lightEl.value
-    });
-
-    hueOut.textContent = String(c.h);
-    satOut.textContent = String(c.s);
-    lightOut.textContent = String(c.l);
-    colorPreview.style.background = hslToCss(c);
-
-    var notes = loadNotes();
-    var activeId = getActiveId();
-    var current = activeId ? findNote(notes, activeId) : null;
-
-    if (current) {
-      current = ensureNoteShape(current);
-      current.color = c;
-      current.updatedAt = nowTs();
-      saveNotes(notes);
-      partialRender(true);
-      return;
-    }
-
-    // brouillon
-    setDraftColor(c);
   }
 
   // -------- Export / Import --------
@@ -959,7 +1206,6 @@
         var map = {};
         var i;
 
-        // map existant
         for (i = 0; i < notes.length; i++) {
           notes[i] = ensureNoteShape(notes[i]);
           map[notes[i].id] = true;
@@ -973,22 +1219,19 @@
         for (i = 0; i < incoming.length; i++) {
           var n = ensureNoteShape(incoming[i]);
 
-          // collision id => regen
           if (map[n.id]) {
             suffix += 1;
             n.id = String(nowTs()) + '-' + String(suffix);
           }
           map[n.id] = true;
 
-          // sécurise title
           n.title = trim(n.title) || 'Note';
           if (n.title.length > 60) n.title = n.title.slice(0, 60);
 
-          // normalise
-          n.color = normalizeColor(n.color);
-          n.updatedAt = n.updatedAt || nowTs();
-          n.pinned = !!n.pinned;
-          if (typeof n.autoTitle !== 'boolean') n.autoTitle = true;
+          n.tag = trim(n.tag || '');
+          if (n.tag.length > 30) n.tag = n.tag.slice(0, 30);
+
+          if (n.colorMode !== 'tag' && n.colorMode !== 'custom') n.colorMode = 'custom';
 
           if (n.pinned) pinnedAdd.push(n);
           else normalAdd.push(n);
@@ -996,7 +1239,6 @@
           added += 1;
         }
 
-        // append en fin de bloc (respect de l’ordre importé)
         var s = splitPinned(notes);
         s.pinned = s.pinned.concat(pinnedAdd);
         s.normal = s.normal.concat(normalAdd);
@@ -1026,13 +1268,8 @@
   newBtnHome.onclick = startNewNote;
   emptyCreateBtn.onclick = startNewNote;
 
-  saveBtn.onclick = function () {
-    saveCurrent();
-  };
-
-  clearBtn.onclick = function () {
-    deleteActiveOrClear();
-  };
+  saveBtn.onclick = saveCurrent;
+  clearBtn.onclick = deleteActiveOrClear;
 
   copyBtn.onclick = copyAll;
   renameBtn.onclick = promptRenameActive;
@@ -1042,10 +1279,6 @@
     if (!activeId) { toast('Épingle après avoir créé/sélectionné une note.'); return; }
     togglePin(activeId);
   };
-
-  hueEl.oninput = applyColorChange;
-  satEl.oninput = applyColorChange;
-  lightEl.oninput = applyColorChange;
 
   exportBtn.onclick = exportJSON;
 
@@ -1057,43 +1290,78 @@
     importFile.onchange = function () {
       var f = importFile.files && importFile.files[0] ? importFile.files[0] : null;
       importJSONFile(f);
-      // reset input (permet réimport du même fichier)
       try { importFile.value = ''; } catch (e) {}
     };
   }
+
+  // Hybrid color UX events
+  if (tagSelect) {
+    tagSelect.onchange = function () {
+      applyTag(tagSelect.value || '');
+    };
+  }
+
+  if (colorPicker) {
+    colorPicker.oninput = function () {
+      // custom => bascule en mode personnalisé
+      setColorFromHex(colorPicker.value, 'custom', true);
+    };
+  }
+
+  if (presetPalette) {
+    // bind presets
+    var swatches = presetPalette.querySelectorAll('.swatch');
+    var i;
+    for (i = 0; i < swatches.length; i++) {
+      (function (btn) {
+        btn.onclick = function () {
+          var hex = btn.getAttribute('data-hex') || '';
+          if (!hex) return;
+          setColorFromHex(hex, 'custom', true);
+        };
+      })(swatches[i]);
+    }
+  }
+
+  if (advancedToggle && advancedSection) {
+    advancedToggle.onclick = function () {
+      advancedSection.hidden = !advancedSection.hidden;
+      advancedToggle.textContent = advancedSection.hidden ? '⚙️ Avancé (HSL)' : '✅ Avancé (HSL)';
+    };
+  }
+
+  function applyAdvancedSliderChange() {
+    var c = normalizeColor({
+      h: hueEl.value,
+      s: satEl.value,
+      l: lightEl.value
+    });
+
+    // custom + recent
+    setColorFromHsl(c, 'custom', true);
+  }
+
+  if (hueEl) hueEl.oninput = applyAdvancedSliderChange;
+  if (satEl) satEl.oninput = applyAdvancedSliderChange;
+  if (lightEl) lightEl.oninput = applyAdvancedSliderChange;
 
   // Dirty + autosave
   noteEl.oninput = function () {
     var notes = loadNotes();
     var activeId = getActiveId();
     var current = activeId ? findNote(notes, activeId) : null;
+    if (current) current = ensureNoteShape(current);
 
     setDirty(computeDirtyAgainstCurrent(current));
 
-    if (activeId) {
-      scheduleAutosave();
-    } else {
-      // brouillon : pas d’autosave, mais statut mis à jour
-      renderSaveStatus();
-    }
+    if (activeId) scheduleAutosave();
+    else renderSaveStatus();
   };
 
-  // Init : si aucune note -> éditeur, sinon home
+  // Init
   (function init() {
     var notes = loadNotes();
     if (!notes.length) setView('editor');
     fullRender(false);
-
-    // Init saved state
-    var activeId = getActiveId();
-    if (activeId) {
-      var n = findNote(loadNotes(), activeId);
-      if (n) {
-        n = ensureNoteShape(n);
-        markSavedState(n.content || '');
-      }
-    } else {
-      markSavedState(noteEl.value || '');
-    }
   })();
 })();
