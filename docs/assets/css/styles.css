@@ -65,6 +65,7 @@ body {
 .view { width: 100%; max-width: 1200px; margin: 0 auto; }
 .view[hidden] { display: none; }
 .muted { color: rgba(229,231,235,0.7); }
+.small { font-size: 12px; }
 
 .btn {
   padding: 10px 16px;
@@ -78,6 +79,11 @@ body {
 .btn:hover { background: rgba(255,255,255,0.12); }
 .btn:focus { outline: 3px solid rgba(147,197,253,0.65); outline-offset: 2px; }
 .btn.secondary { background: rgba(255,255,255,0.04); }
+
+.small-btn {
+  padding: 9px 12px;
+  font-size: 13px;
+}
 
 .btn.danger {
   border-color: rgba(220,38,38,0.35);
@@ -288,6 +294,7 @@ body {
 
 .hint { font-size: 12px; }
 
+/* Panels */
 .panel {
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.06);
@@ -314,6 +321,83 @@ body {
   background: rgba(255,255,255,0.18);
   box-shadow: 0 10px 24px rgba(0,0,0,0.25);
 }
+
+/* Hybrid color UX */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.color-block {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.block-title {
+  font-weight: 700;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.select {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #e5e7eb;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.palette {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: var(--sw, rgba(255,255,255,0.12));
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch:hover { transform: translateY(-1px); }
+
+.swatch:focus {
+  outline: 3px solid rgba(147,197,253,0.65);
+  outline-offset: 2px;
+}
+
+.color-picker {
+  width: 54px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+
+/* Advanced sliders */
+.advanced { margin-top: 10px; }
 
 .sliders { display: grid; grid-template-columns: 1fr; gap: 10px; }
 
@@ -372,6 +456,10 @@ body {
 }
 
 /* ===== Mobile ===== */
+@media (max-width: 720px) {
+  .color-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 520px) {
   .home-head { flex-direction: column; align-items: stretch; }
   .home-actions { justify-content: space-between; }
