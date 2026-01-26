@@ -142,99 +142,109 @@ body {
   border-color: rgba(255,255,255,0.18);
 }
 
-/* ✅ Premium FX uniquement pour les favoris (pinned) */
-.note-card.fx-premium {
-  border-color: rgba(32,34,34,0.9);
-  background: radial-gradient(circle 280px at 0% 0%, rgba(68,68,68,0.40), rgba(12,13,13,0.75));
-}
-
-/* halo “outer” */
-.note-card.fx-premium::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  background: radial-gradient(circle 240px at 0% 0%, rgba(255,255,255,0.28), rgba(12,13,13,0));
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* “ray” blur */
-.fx-ray {
-  width: 220px;
-  height: 45px;
-  border-radius: 999px;
-  position: absolute;
-  background-color: rgba(199,199,199,0.65);
-  opacity: 0.33;
-  box-shadow: 0 0 50px rgba(255,255,255,0.9);
-  filter: blur(12px);
-  transform-origin: 10%;
-  top: -8px;
-  left: -8px;
-  transform: rotate(40deg);
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* lignes de structure */
-.fx-lines { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.fx-line { position: absolute; background-color: rgba(44,44,44,0.70); }
-
-.fx-top {
-  top: 10%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(136,136,136,0.60) 30%, rgba(29,31,31,0.35) 70%);
-}
-.fx-bottom { bottom: 10%; left: 0; right: 0; height: 1px; }
-.fx-left {
-  left: 10%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg, rgba(116,116,116,0.55) 30%, rgba(34,36,36,0.35) 70%);
-}
-.fx-right { right: 10%; top: 0; bottom: 0; width: 1px; }
-
-/* dot animé */
-.fx-dot {
-  width: 5px;
-  height: 5px;
-  position: absolute;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(255,255,255,0.95);
-  border-radius: 999px;
-  z-index: 2;
-  right: 10%;
-  top: 10%;
-  pointer-events: none;
-  animation: fxMoveDot 6s linear infinite;
-}
-
-@keyframes fxMoveDot {
-  0%, 100% { top: 10%; right: 10%; }
-  25% { top: 10%; right: calc(100% - 35px); }
-  50% { top: calc(100% - 30px); right: calc(100% - 35px); }
-  75% { top: calc(100% - 30px); right: 10%; }
-}
-
-/* accessibilité perf */
-@media (prefers-reduced-motion: reduce) {
-  .fx-dot { animation: none; }
-  .fx-ray { display: none; }
-}
-
 .note-card .color-bar {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 8px;
   opacity: 0.9;
-  z-index: 5;
+  z-index: 2;
 }
 
+/* ===== Premium FX (⭐ uniquement) =====
+   - Appliqué seulement aux cards favoris via class .fx-fav
+   - Accent couleur via CSS variable --fx-accent (définie en JS)
+   - Dot animé en continu, décor en pointer-events:none */
+.note-card.fx-fav {
+  border-color: rgba(255,255,255,0.18);
+  background: radial-gradient(320px 180px at 0% 0%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 35%, rgba(255,255,255,0.06) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 18px 55px rgba(0,0,0,0.35);
+}
+
+.note-card.fx-fav::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  pointer-events: none;
+  background:
+    radial-gradient(260px 200px at 0% 0%, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.00) 62%),
+    radial-gradient(240px 220px at 100% 100%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 60%);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.note-card.fx-fav::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 56px;
+  border-radius: 999px;
+  left: -30px;
+  top: -26px;
+  pointer-events: none;
+  background: rgba(255,255,255,0.35);
+  opacity: 0.18;
+  filter: blur(12px);
+  transform: rotate(35deg);
+  transform-origin: 10% 10%;
+  z-index: 1;
+}
+
+/* “cadre” subtil via lignes */
+.note-card.fx-fav .fx-line {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255,255,255,0.10);
+  z-index: 1;
+}
+.note-card.fx-fav .fx-line.top { left: 10%; right: 10%; top: 12%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0.06)); }
+.note-card.fx-fav .fx-line.bottom { left: 10%; right: 10%; bottom: 12%; height: 1px; background: rgba(255,255,255,0.08); }
+.note-card.fx-fav .fx-line.left { top: 10%; bottom: 10%; left: 12%; width: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.06)); }
+.note-card.fx-fav .fx-line.right { top: 10%; bottom: 10%; right: 12%; width: 1px; background: rgba(255,255,255,0.08); }
+
+/* Dot animé */
+.note-card.fx-fav .fx-dot {
+  width: 6px;
+  height: 6px;
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 3;
+
+  background: #ffffff;
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.95),
+    0 0 22px var(--fx-accent, rgba(255,255,255,0.4));
+  animation: fxMoveDot 6s linear infinite;
+}
+
+@keyframes fxMoveDot {
+  0%, 100% {
+    top: 10%;
+    right: 10%;
+  }
+  25% {
+    top: 10%;
+    right: calc(100% - 20px);
+  }
+  50% {
+    top: calc(100% - 18px);
+    right: calc(100% - 20px);
+  }
+  75% {
+    top: calc(100% - 18px);
+    right: 10%;
+  }
+}
+
+/* Respect accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .note-card.fx-fav .fx-dot { animation: none; }
+}
+
+/* Contenu au-dessus des FX layers */
 .note-card .card-top,
 .note-card .card-snippet {
   position: relative;
@@ -268,6 +278,8 @@ body {
   display: flex;
   gap: 8px;
   align-items: center;
+  position: relative;
+  z-index: 5;
 }
 
 .icon-btn {
@@ -436,7 +448,9 @@ body {
   margin-bottom: 10px;
 }
 
-.block-title { font-weight: 700; }
+.block-title {
+  font-weight: 700;
+}
 
 .row {
   display: flex;
@@ -445,7 +459,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* select + options lisibles */
+/* Dropdown contrast fix */
 .select {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
@@ -454,11 +468,21 @@ body {
   padding: 10px 12px;
   font-size: 14px;
 }
-.select:focus { outline: 3px solid rgba(147,197,253,0.65); outline-offset: 2px; }
-.select option { background: #ffffff; color: #111827; }
+.select:focus {
+  outline: 3px solid rgba(147,197,253,0.65);
+  outline-offset: 2px;
+}
+.select option {
+  background: #ffffff;
+  color: #111827;
+}
 .select option[value=""] { color: #6b7280; }
 
-.palette { display: flex; gap: 10px; flex-wrap: wrap; }
+.palette {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .swatch {
   width: 34px;
@@ -469,8 +493,13 @@ body {
   cursor: pointer;
   padding: 0;
 }
+
 .swatch:hover { transform: translateY(-1px); }
-.swatch:focus { outline: 3px solid rgba(147,197,253,0.65); outline-offset: 2px; }
+
+.swatch:focus {
+  outline: 3px solid rgba(147,197,253,0.65);
+  outline-offset: 2px;
+}
 
 .color-picker {
   width: 54px;
