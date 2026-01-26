@@ -3,7 +3,7 @@
 // + Premium FX animation on pinned cards only (Home)
 // ES5 compatible (iOS 11/12)
 //
-// HOTFIX: Defensive DOM bindings to avoid startup crash if some optional nodes are missing.
+// FIX: Robust storage layer (localStorage fallback -> in-memory) to avoid "nothing works" when storage is blocked.
 
 (function () {
   var NOTES_KEY = 'notepad.notes.v1';
@@ -26,6 +26,38 @@
   };
 
   function byId(id) { return document.getElementById(id); }
+
+  // ---------- Storage (robust) ----------
+  var _memStore = {};
+  var _hasLocal = false;
+
+  (function detectStorage() {
+    try {
+      if (!window.localStorage) { _hasLocal = false; return; }
+      var k = '__notepad_test__';
+      window.localStorage.setItem(k, '1');
+      window.localStorage.removeItem(k);
+      _hasLocal = true;
+    } catch (e) {
+      _hasLocal = false;
+    }
+  })();
+
+  function storeGet(key) {
+    if (_hasLocal) {
+      try { return window.localStorage.getItem(key); }
+      catch (e) { _hasLocal = false; }
+    }
+    return _memStore.hasOwnProperty(key) ? _memStore[key] : null;
+  }
+
+  function storeSet(key, val) {
+    if (_hasLocal) {
+      try { window.localStorage.setItem(key, String(val)); return; }
+      catch (e) { _hasLocal = false; }
+    }
+    _memStore[key] = String(val);
+  }
 
   // Views / navigation (optional)
   var homeView = byId('homeView');
@@ -93,7 +125,7 @@
   // -------- Storage helpers --------
   function loadNotes() {
     try {
-      var raw = localStorage.getItem(NOTES_KEY);
+      var raw = storeGet(NOTES_KEY);
       var notes = raw ? JSON.parse(raw) : [];
       return notes && notes.length ? notes : [];
     } catch (e) {
@@ -104,27 +136,27 @@
   function saveNotes(notes) {
     try {
       notes = normalizeOrder(notes);
-      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+      storeSet(NOTES_KEY, JSON.stringify(notes));
     } catch (e) {}
   }
 
   function getActiveId() {
-    try { return localStorage.getItem(ACTIVE_KEY) || ''; }
+    try { return storeGet(ACTIVE_KEY) || ''; }
     catch (e) { return ''; }
   }
 
   function setActiveId(id) {
-    try { localStorage.setItem(ACTIVE_KEY, id || ''); }
+    try { storeSet(ACTIVE_KEY, id || ''); }
     catch (e) {}
   }
 
   function getView() {
-    try { return localStorage.getItem(VIEW_KEY) || 'home'; }
+    try { return storeGet(VIEW_KEY) || 'home'; }
     catch (e) { return 'home'; }
   }
 
   function setView(v) {
-    try { localStorage.setItem(VIEW_KEY, v); }
+    try { storeSet(VIEW_KEY, v); }
     catch (e) {}
   }
 
@@ -147,7 +179,7 @@
 
   function getDraftColor() {
     try {
-      var raw = localStorage.getItem(DRAFT_COLOR_KEY);
+      var raw = storeGet(DRAFT_COLOR_KEY);
       if (!raw) return defaultColor();
       return normalizeColor(JSON.parse(raw));
     } catch (e) {
@@ -156,33 +188,33 @@
   }
 
   function setDraftColor(c) {
-    try { localStorage.setItem(DRAFT_COLOR_KEY, JSON.stringify(normalizeColor(c))); }
+    try { storeSet(DRAFT_COLOR_KEY, JSON.stringify(normalizeColor(c))); }
     catch (e) {}
   }
 
   function getDraftTag() {
-    try { return localStorage.getItem(DRAFT_TAG_KEY) || ''; }
+    try { return storeGet(DRAFT_TAG_KEY) || ''; }
     catch (e) { return ''; }
   }
 
   function setDraftTag(t) {
-    try { localStorage.setItem(DRAFT_TAG_KEY, t || ''); }
+    try { storeSet(DRAFT_TAG_KEY, t || ''); }
     catch (e) {}
   }
 
   function getDraftColorMode() {
-    try { return localStorage.getItem(DRAFT_COLORMODE_KEY) || 'custom'; }
+    try { return storeGet(DRAFT_COLORMODE_KEY) || 'custom'; }
     catch (e) { return 'custom'; }
   }
 
   function setDraftColorMode(m) {
-    try { localStorage.setItem(DRAFT_COLORMODE_KEY, m || 'custom'); }
+    try { storeSet(DRAFT_COLORMODE_KEY, m || 'custom'); }
     catch (e) {}
   }
 
   function loadRecentColors() {
     try {
-      var raw = localStorage.getItem(RECENT_COLORS_KEY);
+      var raw = storeGet(RECENT_COLORS_KEY);
       var arr = raw ? JSON.parse(raw) : [];
       if (!arr || !arr.length) return [];
       return arr;
@@ -192,7 +224,7 @@
   }
 
   function saveRecentColors(arr) {
-    try { localStorage.setItem(RECENT_COLORS_KEY, JSON.stringify(arr || [])); }
+    try { storeSet(RECENT_COLORS_KEY, JSON.stringify(arr || [])); }
     catch (e) {}
   }
 
@@ -397,7 +429,6 @@
 
   function showEditor() {
     if (!homeView || !editorView || !homeBtn || !editorBtn) {
-      // mode simple : rien à toggler
       setView('editor');
       return;
     }
@@ -686,7 +717,6 @@
         };
       })(n.id);
 
-      // Drag & drop (fix closure bug: use `this` not outer `tab`)
       tab.ondragstart = (function (id) {
         return function () {
           dragId = id;
@@ -898,7 +928,6 @@
 
     renderHeaderMeta(notes);
 
-    // si home/editor UI n'existe pas, on force l'éditeur
     var hasNav = !!(homeView && editorView && homeBtn && editorBtn);
     var v = getView();
 
@@ -960,7 +989,6 @@
       }
     }
 
-    // création depuis brouillon
     var id = String(nowTs());
     var title = firstLineTitle(content);
 
@@ -1033,7 +1061,6 @@
     var text = noteEl.value || '';
     if (!text) { toast('Rien à copier.'); return; }
 
-    // window.isSecureContext peut ne pas exister selon browser → garde
     var secure = false;
     try { secure = !!window.isSecureContext; } catch (e) { secure = false; }
 
@@ -1347,5 +1374,10 @@
       if (!notes.length) setView('editor');
     }
     fullRender(false);
+
+    // Info utile : si localStorage est KO, tu veux le savoir vite.
+    if (!_hasLocal) {
+      toast('⚠️ Stockage bloqué : mode mémoire (non persistant).');
+    }
   })();
 })();
