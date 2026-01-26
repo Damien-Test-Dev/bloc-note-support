@@ -1,6 +1,6 @@
 // Fichier : docs/assets/js/app.js
 // Premium + Hybrid color UX (B presets + C recents + A native picker + F categories)
-// + Premium FX on pinned cards (Home only)
+// + Premium FX animation on pinned cards only (Home)
 // ES5 compatible (iOS 11/12)
 
 (function () {
@@ -131,6 +131,7 @@
   }
 
   function getDraftColor() {
+    // compat legacy
     try {
       var raw = localStorage.getItem(DRAFT_COLOR_KEY);
       if (!raw) return defaultColor();
@@ -566,6 +567,7 @@
       syncColorUI(c, ctx.current.colorMode, tag);
       partialRender(true);
     } else {
+      // draft
       setDraftColor(c);
       setDraftColorMode(mode || 'custom');
       tag = getDraftTag();
@@ -602,6 +604,7 @@
       return;
     }
 
+    // draft
     setDraftTag(tag);
     if (tag) {
       setDraftColorMode('tag');
@@ -713,7 +716,7 @@
 
   function renderHome(notes) {
     var q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
-    var list = notes.slice();
+    var list = notes.slice(); // déjà canonique (pinned puis normal)
 
     if (q) {
       list = list.filter(function (n) {
@@ -744,45 +747,39 @@
     }
 
     var i, n, card, bar, top, left, title, actions, pin, ren, del, meta, snip, tagBadge;
+    var fxDot, fxTop, fxBottom, fxLeft, fxRight;
 
     for (i = 0; i < list.length; i++) {
       n = ensureNoteShape(list[i]);
 
-      // ✅ Premium FX uniquement sur pinned
+      // ✅ FX uniquement si pinned
       card = document.createElement('div');
-      card.className = n.pinned ? 'note-card fx-premium' : 'note-card';
+      card.className = 'note-card' + (n.pinned ? ' fx-fav' : '');
 
-      // FX layers (decor) for pinned only
+      // Accent FX lié à la couleur de la note (permet un glow cohérent)
       if (n.pinned) {
-        var fxRay = document.createElement('div');
-        fxRay.className = 'fx-ray';
-        fxRay.setAttribute('aria-hidden', 'true');
+        card.style.setProperty('--fx-accent', hslToCss(n.color));
 
-        var fxLines = document.createElement('div');
-        fxLines.className = 'fx-lines';
-        fxLines.setAttribute('aria-hidden', 'true');
-
-        var fxTop = document.createElement('div');
-        fxTop.className = 'fx-line fx-top';
-        var fxBottom = document.createElement('div');
-        fxBottom.className = 'fx-line fx-bottom';
-        var fxLeft = document.createElement('div');
-        fxLeft.className = 'fx-line fx-left';
-        var fxRight = document.createElement('div');
-        fxRight.className = 'fx-line fx-right';
-
-        fxLines.appendChild(fxTop);
-        fxLines.appendChild(fxBottom);
-        fxLines.appendChild(fxLeft);
-        fxLines.appendChild(fxRight);
-
-        var fxDot = document.createElement('div');
+        fxDot = document.createElement('div');
         fxDot.className = 'fx-dot';
-        fxDot.setAttribute('aria-hidden', 'true');
 
-        card.appendChild(fxRay);
-        card.appendChild(fxLines);
+        fxTop = document.createElement('div');
+        fxTop.className = 'fx-line top';
+
+        fxBottom = document.createElement('div');
+        fxBottom.className = 'fx-line bottom';
+
+        fxLeft = document.createElement('div');
+        fxLeft.className = 'fx-line left';
+
+        fxRight = document.createElement('div');
+        fxRight.className = 'fx-line right';
+
         card.appendChild(fxDot);
+        card.appendChild(fxTop);
+        card.appendChild(fxBottom);
+        card.appendChild(fxLeft);
+        card.appendChild(fxRight);
       }
 
       bar = document.createElement('div');
@@ -900,21 +897,17 @@
       if (!preserveEditorValue) noteEl.value = current.content || '';
 
       if (tagSelect) tagSelect.value = current.tag || '';
-
       syncColorUI(current.color, current.colorMode, current.tag);
 
       pinBtn.textContent = current.pinned ? '⭐ Désépingler' : '⭐ Épingler';
-
       setDirty(computeDirtyAgainstCurrent(current));
     } else {
       if (!preserveEditorValue) noteEl.value = noteEl.value || '';
 
       if (tagSelect) tagSelect.value = getDraftTag() || '';
-
       syncColorUI(getDraftColor(), getDraftColorMode(), getDraftTag());
 
       pinBtn.textContent = '⭐ Épingler';
-
       setDirty(computeDirtyAgainstCurrent(null));
     }
   }
@@ -986,6 +979,7 @@
       }
     }
 
+    // création depuis brouillon
     var id = String(nowTs());
     var title = firstLineTitle(content);
 
@@ -1266,3 +1260,124 @@
 
         var s = splitPinned(notes);
         s.pinned = s.pinned.concat(pinnedAdd);
+        s.normal = s.normal.concat(normalAdd);
+        notes = s.pinned.concat(s.normal);
+
+        saveNotes(notes);
+        setView('home');
+        fullRender(true);
+        toast('Import terminé : ' + added + ' note(s) ajoutée(s).');
+      } catch (e) {
+        toast('Import : JSON invalide.');
+      }
+    };
+    reader.onerror = function () {
+      toast('Import : lecture impossible.');
+    };
+    reader.readAsText(file);
+  }
+
+  // -------- Events --------
+  homeBtn.onclick = function () { showHome(); fullRender(true); };
+  editorBtn.onclick = function () { showEditor(); fullRender(true); noteEl.focus(); };
+
+  if (searchInput) searchInput.oninput = function () { partialRender(true); };
+
+  newBtn.onclick = startNewNote;
+  newBtnHome.onclick = startNewNote;
+  emptyCreateBtn.onclick = startNewNote;
+
+  saveBtn.onclick = saveCurrent;
+  clearBtn.onclick = deleteActiveOrClear;
+
+  copyBtn.onclick = copyAll;
+  renameBtn.onclick = promptRenameActive;
+
+  pinBtn.onclick = function () {
+    var activeId = getActiveId();
+    if (!activeId) { toast('Épingle après avoir créé/sélectionné une note.'); return; }
+    togglePin(activeId);
+  };
+
+  exportBtn.onclick = exportJSON;
+
+  importBtn.onclick = function () {
+    if (importFile) importFile.click();
+  };
+
+  if (importFile) {
+    importFile.onchange = function () {
+      var f = importFile.files && importFile.files[0] ? importFile.files[0] : null;
+      importJSONFile(f);
+      try { importFile.value = ''; } catch (e) {}
+    };
+  }
+
+  // Hybrid color UX events
+  if (tagSelect) {
+    tagSelect.onchange = function () {
+      applyTag(tagSelect.value || '');
+    };
+  }
+
+  if (colorPicker) {
+    colorPicker.oninput = function () {
+      setColorFromHex(colorPicker.value, 'custom', true);
+    };
+  }
+
+  if (presetPalette) {
+    var swatches = presetPalette.querySelectorAll('.swatch');
+    var i;
+    for (i = 0; i < swatches.length; i++) {
+      (function (btn) {
+        btn.onclick = function () {
+          var hex = btn.getAttribute('data-hex') || '';
+          if (!hex) return;
+          setColorFromHex(hex, 'custom', true);
+        };
+      })(swatches[i]);
+    }
+  }
+
+  if (advancedToggle && advancedSection) {
+    advancedToggle.onclick = function () {
+      advancedSection.hidden = !advancedSection.hidden;
+      advancedToggle.textContent = advancedSection.hidden ? '⚙️ Avancé (HSL)' : '✅ Avancé (HSL)';
+    };
+  }
+
+  function applyAdvancedSliderChange() {
+    var c = normalizeColor({
+      h: hueEl.value,
+      s: satEl.value,
+      l: lightEl.value
+    });
+
+    setColorFromHsl(c, 'custom', true);
+  }
+
+  if (hueEl) hueEl.oninput = applyAdvancedSliderChange;
+  if (satEl) satEl.oninput = applyAdvancedSliderChange;
+  if (lightEl) lightEl.oninput = applyAdvancedSliderChange;
+
+  // Dirty + autosave
+  noteEl.oninput = function () {
+    var notes = loadNotes();
+    var activeId = getActiveId();
+    var current = activeId ? findNote(notes, activeId) : null;
+    if (current) current = ensureNoteShape(current);
+
+    setDirty(computeDirtyAgainstCurrent(current));
+
+    if (activeId) scheduleAutosave();
+    else renderSaveStatus();
+  };
+
+  // Init
+  (function init() {
+    var notes = loadNotes();
+    if (!notes.length) setView('editor');
+    fullRender(false);
+  })();
+})();
